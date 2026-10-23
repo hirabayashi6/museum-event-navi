@@ -1,6 +1,6 @@
 # 博物館イベントナビの定期実行（時刻はすべて日本時間）
 #   公式サイトの巡回 … 火・金 4:00
-#   Instagram        … 毎日 1:00
+#   Instagram        … 毎日 1:00（Metaの上限のため1回400件まで。残りは翌日）
 #   元ページとの照合  … 日曜 3:00
 #   設備の調べ直し    … 毎月1日 2:00
 # 巡回の状態（名簿を含む）は暗号化して、リリース「state」の添付ファイルとして保存する（リポジトリには入れない）
@@ -16,7 +16,7 @@ on:
       task:
         description: "実行する作業"
         type: choice
-        options: [site, instagram, verify, amenities]
+        options: [site, instagram, verify, amenities, export]
         default: instagram
 permissions:
   contents: write
@@ -64,6 +64,7 @@ jobs:
             instagram) npx tsx src/instagram.ts --limit 400 && npx tsx src/classify-llm.ts ;;
             verify) npx tsx src/verify.ts --concurrency 14 ;;
             amenities) npx tsx src/amenities.ts --only-live --concurrency 16 ;;
+            export) echo "書き出しと公開だけを行う（動作確認用）" ;;
           esac
           npx tsx src/export.ts
       # 途中で失敗しても、そこまでの結果は保存する
