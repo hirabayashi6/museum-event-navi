@@ -1,0 +1,20 @@
+# 公開リポジトリ：公開してよいものだけを1つずつ指定し、それ以外はすべて除外する
+# 社内資料（docs・ops・TODO・design・phase1）、名簿・巡回データ（data/）、鍵（.env）は入れない
+/*
+!/.gitignore
+!/README.md
+!/.github/
+!/crawler/
+!/site/
+!/supabase/
+!/scripts/
+
+# 鍵・依存・ビルド結果
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+.vercel/
+*.tsbuildinfo
+crawler/save-key.sh

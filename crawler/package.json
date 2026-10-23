@@ -1,0 +1,31 @@
+{
+  "name": "museum-event-navi-crawler",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "discover": "tsx src/discover.ts",
+    "crawl": "tsx src/crawl.ts",
+    "extract": "tsx src/extract.ts",
+    "instagram": "tsx src/instagram.ts",
+    "typecheck": "tsc --noEmit",
+    "structure": "tsx src/structure.ts",
+    "export": "tsx src/export.ts",
+    "update": "tsx src/crawl.ts --concurrency 16 && tsx src/structure.ts && tsx src/classify-llm.ts && tsx src/repair-titles.ts && tsx src/export.ts",
+    "classify": "tsx src/classify-llm.ts",
+    "repair": "tsx src/repair-titles.ts",
+    "amenities": "tsx src/amenities.ts",
+    "verify": "tsx src/verify.ts",
+    "facebook": "tsx src/facebook.ts"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "csv-parse": "^7.0.3",
+    "csv-stringify": "^6.9.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "museum-event-navi-site",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3220",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "images": "node -e \"const fs=require('fs');const d='public/images';fs.writeFileSync(d+'/manifest.json',JSON.stringify(fs.readdirSync(d).filter(f=>/\\.(webp|png|jpe?g)$/i.test(f)).sort()))\"",
+    "prebuild": "npm run images",
+    "predev": "npm run images"
+  },
+  "dependencies": {
+    "next": "^16.4.2",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}

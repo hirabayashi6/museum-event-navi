@@ -1,0 +1,81 @@
+# 博物館イベントナビの定期実行（時刻はすべて日本時間）
+#   公式サイトの巡回 … 火・金 4:00
+#   Instagram        … 毎日 1:00
+#   元ページとの照合  … 日曜 3:00
+#   設備の調べ直し    … 毎月1日 2:00
+# 巡回の状態（名簿を含む）は暗号化して、リリース「state」の添付ファイルとして保存する（リポジトリには入れない）
+name: navi
+on:
+  schedule:
+    - cron: "0 19 * * 1,4"
+    - cron: "0 16 * * *"
+    - cron: "0 18 * * 6"
+    - cron: "0 17 1 * *"
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "実行する作業"
+        type: choice
+        options: [site, instagram, verify, amenities]
+        default: instagram
+permissions:
+  contents: write
+# 状態ファイルを同時に書き換えないよう、1本ずつ順に動かす
+concurrency:
+  group: navi-state
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    env:
+      GH_TOKEN: ${{ github.token }}
+      STATE_PASSPHRASE: ${{ secrets.STATE_PASSPHRASE }}
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      META_TOKEN: ${{ secrets.META_TOKEN }}
+      IG_USER_ID: ${{ secrets.IG_USER_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: crawler/package-lock.json
+      - name: 作業を決める
+        id: task
+        run: |
+          case "${{ github.event.schedule }}" in
+            "0 19 * * 1,4") t=site ;;
+            "0 16 * * *") t=instagram ;;
+            "0 18 * * 6") t=verify ;;
+            "0 17 1 * *") t=amenities ;;
+            *) t="${{ inputs.task }}" ;;
+          esac
+          echo "name=$t" >> "$GITHUB_OUTPUT"
+      - name: 状態を復元
+        run: gh release download state -p state.enc -D . && bash scripts/state.sh unpack
+      - run: npm ci
+        working-directory: crawler
+      - name: 実行
+        working-directory: crawler
+        run: |
+          case "${{ steps.task.outputs.name }}" in
+            site) npx tsx src/crawl.ts --concurrency 16 && npx tsx src/structure.ts && npx tsx src/classify-llm.ts && npx tsx src/repair-titles.ts ;;
+            instagram) npx tsx src/instagram.ts --limit 400 && npx tsx src/classify-llm.ts ;;
+            verify) npx tsx src/verify.ts --concurrency 14 ;;
+            amenities) npx tsx src/amenities.ts --only-live --concurrency 16 ;;
+          esac
+          npx tsx src/export.ts
+      # 途中で失敗しても、そこまでの結果は保存する
+      - name: 状態を暗号化して保存
+        if: always()
+        run: |
+          [ -d data/crawl ] || exit 0
+          bash scripts/state.sh pack
+          gh release upload state state.enc --clobber
+      - name: サイトに反映
+        working-directory: site
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx --yes vercel@50.37.3 --prod --yes --token "${{ secrets.VERCEL_TOKEN }}"
