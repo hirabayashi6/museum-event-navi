@@ -17,7 +17,8 @@
     "verify": "tsx src/verify.ts",
     "facebook": "tsx src/facebook.ts",
     "exhibit-pages": "tsx src/exhibit-pages.ts",
-    "closed-days": "tsx src/closed-days.ts"
+    "closed-days": "tsx src/closed-days.ts",
+    "opendata": "tsx src/opendata.ts"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

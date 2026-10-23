@@ -30,9 +30,10 @@ export type NaviEvent = {
   bring: string | null;
   lecturer: string | null;
   source_url: string;
-  method: "api" | "詳細ページ" | "一覧" | "Instagram" | "Facebook";
+  method: "api" | "詳細ページ" | "一覧" | "Instagram" | "Facebook" | "オープンデータ";
   confidence: number;
   raw?: string; // 題名を作り直すときに使う、元のページの前後の文章（公開はしない）
+  credit?: string; // オープンデータの出典表示（例：出典：岡崎市「イベント一覧」（CC BY 4.0））
   extracted_at: string;
 };
 

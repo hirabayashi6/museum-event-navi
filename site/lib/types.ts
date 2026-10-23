@@ -28,6 +28,7 @@ export type NaviEvent = {
   amen?: { nursing: boolean; toilet: boolean; diaper: boolean; stroller: boolean };
   source_url: string;
   method: string;
+  credit?: string; // オープンデータの出典表示
   confidence: number;
 };
 

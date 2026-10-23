@@ -33,8 +33,8 @@ async function main(): Promise<void> {
   const sample = Number(argValue("sample") ?? "0");
   const conc = Number(argValue("concurrency") ?? "12");
   let events = JSON.parse(fs.readFileSync(path.join(DATA, "site", "events.json"), "utf8")) as NaviEvent[];
-  // Instagram の投稿は外から読み直せない（ログインが必要）ので、照合の対象から外す
-  events = events.filter((e) => e.method !== "Instagram");
+  // SNSの投稿は外から読み直せず、オープンデータは表のデータなので、照合の対象から外す
+  events = events.filter((e) => !["Instagram", "Facebook", "オープンデータ"].includes(e.method));
   if (sample) events = events.sort(() => Math.random() - 0.5).slice(0, sample);
   // 同じページの読み直しは1回にまとめる
   const byUrl = new Map<string, NaviEvent[]>();

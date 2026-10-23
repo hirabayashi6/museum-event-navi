@@ -17,7 +17,7 @@ case "${1:-}" in
     latest="$(ls data/crawl/changes 2>/dev/null | sort | tail -1)"
     tar -czf - --exclude='data/*backup*' --exclude='data/amenities_v1_*' --exclude='data/logs' --exclude='data/crawl/changes' \
       data/master data/crawl/state.json data/crawl/snapshots data/events data/sns data/discovery \
-      data/kind_cache.json data/title_cache.json data/amenities.json data/verify.json data/review \
+      data/kind_cache.json data/title_cache.json data/amenities.json data/verify.json data/review data/closed.json data/opendata \
       ${latest:+data/crawl/changes/$latest} 2>/dev/null | "${ENC[@]}" > "$OUT"
     echo "暗号化して保存：$(du -h "$OUT" | cut -f1)" ;;
   unpack)

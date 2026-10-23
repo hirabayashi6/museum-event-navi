@@ -96,6 +96,7 @@ export default async function EventPage({ params }: Props) {
             </p>
           )}
           <p className="note">{e.method === "Instagram" || e.method === "Facebook" ? t(lang, "snsNote") : `${e.museum}${t(lang, "autoNote")}`}</p>
+          {e.credit && <p className="note">{e.credit}</p>}
           {lang !== "ja" && <p className="note">{t(lang, "titleNote")}</p>}
           <JsonLd data={jsonLd} />
           <JsonLd data={breadcrumbLd([{ name: "トップ", path: "/" }, { name: e.pref, path: `/area/${encodeURIComponent(e.pref)}` }, { name: e.museum, path: `/museums/${e.no}` }, { name: e.title, path: `/events/${e.id}` }])} />
