@@ -14,11 +14,13 @@ cd "$ROOT"
 case "${1:-}" in
   pack)
     # 変更の記録（crawl/changes）は最新だけ、バックアップは入れない
-    latest="$(ls data/crawl/changes 2>/dev/null | sort | tail -1)"
-    tar -czf - --exclude='data/*backup*' --exclude='data/amenities_v1_*' --exclude='data/logs' --exclude='data/crawl/changes' \
-      data/master data/crawl/state.json data/crawl/snapshots data/events data/sns data/discovery \
+    latest="$(ls data/crawl/changes 2>/dev/null | sort | tail -1 || true)"
+    # あるものだけを固める（ないファイルがあっても止まらないように）
+    paths=()
+    for p in data/master data/crawl/state.json data/crawl/snapshots data/events data/sns data/discovery \
       data/kind_cache.json data/title_cache.json data/amenities.json data/verify.json data/review data/closed.json data/opendata \
-      ${latest:+data/crawl/changes/$latest} 2>/dev/null | "${ENC[@]}" > "$OUT"
+      ${latest:+data/crawl/changes/$latest}; do if [ -e "$p" ]; then paths+=("$p"); fi; done
+    tar -czf - --exclude='data/*backup*' --exclude='data/amenities_v1_*' --exclude='data/logs' "${paths[@]}" | "${ENC[@]}" > "$OUT"
     echo "暗号化して保存：$(du -h "$OUT" | cut -f1)" ;;
   unpack)
     "${ENC[@]}" -d < "$OUT" | tar -xzf -

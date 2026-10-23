@@ -20,7 +20,8 @@ export function readCsv(file: string): Row[] {
 export function loadMaster(): Row[] {
   const rows = readCsv(MASTER_CSV);
   // 元データの URL種別・接続 を足す（初回のみ必要）
-  const src = new Map(readCsv(SOURCE_CSV).map((r) => [r["No."] ?? "", r]));
+  // 元データ（営業リスト）は手元にしかないので、なければ使わない（GitHub の自動実行など）
+  const src = new Map((fs.existsSync(SOURCE_CSV) ? readCsv(SOURCE_CSV) : []).map((r) => [r["No."] ?? "", r]));
   for (const r of rows) {
     const s = src.get(r["No."] ?? "");
     for (const c of MASTER_COLUMNS) r[c] ??= "";
