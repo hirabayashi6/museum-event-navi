@@ -166,6 +166,10 @@ export const UI = d({
   voiceAnon: { ja: "匿名", en: "Anonymous", easy: "なまえ なし" },
   // トップの入口（どこで → いつ → 何歳）
   pickWhere: { ja: "どこで？", en: "Where?", easy: "どこで？" },
+  geoPick: { ja: "現在地から選ぶ", en: "Use my location", easy: "いま いる ところで えらぶ" },
+  geoBusy: { ja: "現在地を調べています…", en: "Finding your location…", easy: "いま いる ところを しらべています…" },
+  geoFail: { ja: "現在地が分かりませんでした。一覧から選んでください。", en: "Couldn't get your location. Please choose from the list.", easy: "わかりませんでした。 リストから えらんで ください。" },
+  geoOutside: { ja: "日本の外にいるようです。一覧から選んでください。", en: "You seem to be outside Japan. Please choose from the list.", easy: "日本の 外に いるようです。 リストから えらんで ください。" },
   pickWhen: { ja: "いつ？", en: "When?", easy: "いつ？" },
   pickAge: { ja: "何歳？（選ばなくてもOK）", en: "Age? (optional)", easy: "何さい？（えらばなくても いい）" },
   regionHokkaidoTohoku: { ja: "北海道・東北", en: "Hokkaido / Tohoku", easy: "北海道・とうほく" },

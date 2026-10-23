@@ -81,6 +81,7 @@ export default async function Home() {
             current={pref}
             allLabel={t(lang, "allJapan")}
             allCount={events.length}
+            geo={{ pick: t(lang, "geoPick"), busy: t(lang, "geoBusy"), fail: t(lang, "geoFail"), outside: t(lang, "geoOutside") }}
             rows={REGIONS.map(([key, prefs]) => ({
               label: t(lang, key),
               prefs: prefs.map((p) => ({ value: p, text: lang === "ja" ? p.replace(/(都|府|県)$/, "") : prefLabel(p, lang), count: prefCount.get(p) ?? 0 })),
