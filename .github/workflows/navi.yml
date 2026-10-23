@@ -79,4 +79,4 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@50.37.3 --prod --yes --scope hirabayashi-5135s-projects --token "${{ secrets.VERCEL_TOKEN }}"
+        run: npx --yes vercel@63.1.2 --prod --yes --scope hirabayashi-5135s-projects --token "${{ secrets.VERCEL_TOKEN }}"
