@@ -6,10 +6,11 @@ import { loadMaster } from "./lib/museums.js";
 import { DATA } from "./lib/paths.js";
 import type { NaviEvent } from "./structure.js";
 import { rejectReason, cleanPublicTitle } from "./lib/quality.js";
+import { cleanClosed } from "./closed-days.js";
 
 if (fs.existsSync(".env")) process.loadEnvFile(".env");
 
-export type SiteMuseum = { no: string; name: string; pref: string; city: string; category: string; url: string; instagram: string | null; amen?: { nursing: boolean; toilet: boolean; diaper: boolean; stroller: boolean } };
+export type SiteMuseum = { no: string; name: string; pref: string; city: string; category: string; url: string; instagram: string | null; closed?: string; amen?: { nursing: boolean; toilet: boolean; diaper: boolean; stroller: boolean } };
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -46,11 +47,16 @@ function collect(): { events: NaviEvent[]; museums: SiteMuseum[] } {
   // 絞り込みボタンに使うのは「確実」（あり・設置などと書かれている、または利用案内の設備一覧にある）だけ
   const sure = (a: AmenRaw, k: "nursing" | "toilet" | "diaper" | "stroller") => a[k] && a.level?.[k] === "確実";
   const amen = Object.fromEntries(Object.entries(rawAmen).map(([no, a]) => [no, { nursing: sure(a, "nursing"), toilet: sure(a, "toilet"), diaper: sure(a, "diaper"), stroller: sure(a, "stroller") }]));
+  // 休館日（公式サイトの記載を短く切ったもの）
+  const closedFile = path.join(DATA, "closed.json");
+  const closedRaw = (fs.existsSync(closedFile) ? JSON.parse(fs.readFileSync(closedFile, "utf8")) : {}) as Record<string, { text: string }>;
+  const closed = new Map(Object.entries(closedRaw).map(([no, c]) => [no, cleanClosed(c.text)]));
   const museums: SiteMuseum[] = loadMaster()
     .filter((r) => nos.has(r["No."] ?? ""))
     .map((r) => ({
       no: r["No."] ?? "", name: r["博物館名"] ?? "", pref: r["都道府県"] ?? "", city: r["市町村"] ?? "",
       category: r["カテゴリ"] ?? "", url: r["確認URL"] ?? "",
+      ...(closed.get(r["No."] ?? "") ? { closed: closed.get(r["No."] ?? "") ?? undefined } : {}),
       instagram: r["情報の確度"] === "機械（館サイト）" || r["情報の確度"]?.startsWith("人") ? (r["Instagram"] ?? "").split(" ")[0] || null : null,
       ...(amen[r["No."] ?? ""] ? { amen: { nursing: amen[r["No."] ?? ""]!.nursing, toilet: amen[r["No."] ?? ""]!.toilet, diaper: amen[r["No."] ?? ""]!.diaper, stroller: amen[r["No."] ?? ""]!.stroller } } : {}),
     }));

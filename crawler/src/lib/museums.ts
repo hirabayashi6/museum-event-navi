@@ -8,7 +8,7 @@ export type Row = Record<string, string>;
 
 export const MASTER_COLUMNS = [
   "No.", "都道府県", "市町村", "カテゴリ", "博物館名", "確認URL", "URL種別", "接続", "営業状況",
-  "イベントページURL", "Instagram", "X", "Facebook", "自治体OD", "巡回可否(robots/規約)",
+  "イベントページURL", "展覧会ページURL", "Instagram", "X", "Facebook", "自治体OD", "巡回可否(robots/規約)",
   "監視状態", "情報の確度", "備考",
 ] as const;
 

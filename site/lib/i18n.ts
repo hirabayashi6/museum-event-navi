@@ -57,6 +57,10 @@ export const UI = d({
   kindMore: { ja: "催しの種類で探す", en: "Search by event type", easy: "もよおしの しゅるいで さがす" },
   thisWeekend: { ja: "今週末・祝日", en: "This weekend & holidays", easy: "つぎの 休みの 日" },
   today: { ja: "今日", en: "Today", easy: "今日" },
+  endingSoon: { ja: "もうすぐ終わる", en: "Ending soon", easy: "もうすぐ おわる" },
+  closedDays: { ja: "休館日", en: "Closed", easy: "休みの 日" },
+  closedNote: { ja: "公式サイトの記載です。臨時休館もあるので、お出かけ前にご確認ください。", en: "As written (in Japanese) on the official website. Please check before you go.", easy: "はくぶつかんの サイトに 書いて あった ことです。 行く 前に たしかめて ください。" },
+  endingSoonLead: { ja: "2週間以内に終わる展示・催し", en: "Ending within 2 weeks", easy: "2週間で おわる もの" },
   tomorrow: { ja: "明日", en: "Tomorrow", easy: "あした" },
   nextWeekend: { ja: "その次の休み", en: "The holidays after", easy: "その つぎの 休み" },
   winter: { ja: "冬休み", en: "Winter break", easy: "冬休み" },
@@ -167,6 +171,7 @@ export const UI = d({
   // トップの入口（どこで → いつ → 何歳）
   pickWhere: { ja: "どこで？", en: "Where?", easy: "どこで？" },
   geoPick: { ja: "現在地から選ぶ", en: "Use my location", easy: "いま いる ところで えらぶ" },
+  geoAbout: { ja: "「現在地から選ぶ」を押したときだけ位置情報を使い、都道府県を決めるために国土地理院へ緯度・経度を送ります。位置情報は保存しません。", en: "Your location is used only when you tap \"Use my location\". We send the coordinates to the Geospatial Information Authority of Japan to find your prefecture, and we do not store them.", easy: "「いま いる ところで えらぶ」を おした ときだけ ばしょを つかいます。 ばしょは のこしません。" },
   geoBusy: { ja: "現在地を調べています…", en: "Finding your location…", easy: "いま いる ところを しらべています…" },
   geoFail: { ja: "現在地が分かりませんでした。一覧から選んでください。", en: "Couldn't get your location. Please choose from the list.", easy: "わかりませんでした。 リストから えらんで ください。" },
   geoOutside: { ja: "日本の外にいるようです。一覧から選んでください。", en: "You seem to be outside Japan. Please choose from the list.", easy: "日本の 外に いるようです。 リストから えらんで ください。" },

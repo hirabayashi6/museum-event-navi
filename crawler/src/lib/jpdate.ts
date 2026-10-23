@@ -8,6 +8,8 @@ export function toHalfWidth(s: string): string {
     .replace(/[／]/g, "/")
     .replace(/[．]/g, ".")
     .replace(/[〜～]/g, "～")
+    // 全角・各種のハイフンは半角の「-」にそろえる（「10/17(土)－1/11(日)」のような期間を読むため）
+    .replace(/[－‐−–]/g, "-")
     .replace(/[：]/g, ":");
 }
 

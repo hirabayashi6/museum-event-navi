@@ -31,7 +31,7 @@ export type NaviEvent = {
   confidence: number;
 };
 
-export type Museum = { no: string; name: string; pref: string; city: string; category: string; url: string; instagram: string | null; amen?: { nursing: boolean; toilet: boolean; diaper: boolean; stroller: boolean } };
+export type Museum = { no: string; name: string; pref: string; city: string; category: string; url: string; instagram: string | null; closed?: string; amen?: { nursing: boolean; toilet: boolean; diaper: boolean; stroller: boolean } };
 
 // 「何をしたいか」と種類の対応
 export const WANTS = {

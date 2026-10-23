@@ -34,7 +34,7 @@ function Row({ label, items }: { label: string; items: { text: string; to: strin
 export function FilterBar({ q, lang }: { q: Query; lang: Lang }) {
   const get = (k: string) => list(q[k])[0] ?? "";
   const toggle = (key: string, value: string, drop: string[] = []) => ({ to: get(key) === value ? href(q, key, null, drop) : href(q, key, value, drop), on: get(key) === value });
-  const WHEN: [string, UIKey][] = [["today", "today"], ["tomorrow", "tomorrow"], ["this-weekend", "thisWeekend"], ["next-weekend", "nextWeekend"], ["冬休み", "winter"]];
+  const WHEN: [string, UIKey][] = [["today", "today"], ["tomorrow", "tomorrow"], ["this-weekend", "thisWeekend"], ["next-weekend", "nextWeekend"], ["ending", "endingSoon"], ["冬休み", "winter"]];
   const AGES: [string, UIKey][] = [["baby", "ageBaby"], ["low", "ageLow"], ["high", "ageHigh"]];
   return (
     <div className="fb">

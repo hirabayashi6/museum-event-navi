@@ -1,6 +1,6 @@
 // 一覧の絞り込み。URL の検索条件（?kind=..&age=..&when=..&pref=..）をそのまま使う
 import { AUDIENCES, DEFAULT_KINDS, KINDS, WANTS, type Audience, type Kind, type NaviEvent, type Want } from "./types";
-import { overlaps, seasonRange, todayJst, weekend, dayRange, SEASONS, type Season } from "./dates";
+import { overlaps, seasonRange, todayJst, weekend, dayRange, addDays, SEASONS, type Season } from "./dates";
 import { AGE_TO_AUD, type AgeKey } from "./kids";
 
 export type Query = Record<string, string | string[] | undefined>;
@@ -53,8 +53,14 @@ export function rangeOf(f: Filters): { from: string; to: string } | null {
   return null;
 }
 
+// もうすぐ終わる：開催中で、今日から14日以内に終わるもの
+export const ENDING_DAYS = 14;
+export const isEnding = (e: NaviEvent, today = todayJst()): boolean =>
+  Boolean(e.end_date && e.start_date <= today && e.end_date >= today && e.end_date <= addDays(today, ENDING_DAYS));
+
 export function applyFilters(events: NaviEvent[], f: Filters): NaviEvent[] {
   const range = rangeOf(f);
+  const today = todayJst();
   const wantKinds: readonly Kind[] | null = f.want ? WANTS[f.want] : null;
   return events.filter((e) => {
     // 種類が判定できなかった催しは、種類の絞り込みでは落とさない
@@ -65,6 +71,7 @@ export function applyFilters(events: NaviEvent[], f: Filters): NaviEvent[] {
     if (f.free && e.fee !== "無料") return false;
     if (f.noReserve && e.reservation !== "不要") return false;
     if (range && !overlaps(e.start_date, e.end_date, range.from, range.to)) return false;
+    if (f.when === "ending" && !isEnding(e, today)) return false;
     // キーワードは題名・館名・市町村のどれかに含まれれば
     // 赤ちゃん連れ：授乳室かおむつ替えのある館。多目的トイレのある館
     if (f.baby && !(e.amen?.nursing || e.amen?.diaper)) return false;
@@ -72,7 +79,7 @@ export function applyFilters(events: NaviEvent[], f: Filters): NaviEvent[] {
     if (f.with === "friends" && e.audience.includes("親子")) return false;
     if (f.q && !`${e.title} ${e.museum} ${e.pref}${e.city}`.includes(f.q)) return false;
     return true;
-  });
+  }).sort((a, b) => (f.when === "ending" ? (a.end_date ?? "").localeCompare(b.end_date ?? "") : 0));
 }
 
 export function toSearch(f: Partial<Record<string, string | string[]>>): string {

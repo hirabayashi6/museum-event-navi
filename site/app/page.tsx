@@ -61,6 +61,7 @@ export default async function Home() {
   const weekendTop = [...thisWeekend].sort((a, b) => rank(a) - rank(b)).slice(0, 8);
   const byAge = (k: AgeKey) => applyFilters(scope, parseFilters({ age: AGE_TO_AUD[k] })).filter((e) => e.audience.length > 0).slice(0, 4);
   const freeEasy = applyFilters(scope, parseFilters({ free: "1", noreserve: "1" })).slice(0, 4);
+  const ending = applyFilters(scope, parseFilters({ when: "ending" }));
   const areaQ = area ? { pref: area } : {};
   // 入口の「いつ？」は、選んだ県で絞る（少なくても、その県を見たい人のため）
   const prefQ = pref ? { pref } : {};
@@ -117,6 +118,16 @@ export default async function Home() {
         </div>
         <EventGrid lang={lang} events={weekendTop} />
       </section>
+
+      {ending.length > 0 && (
+        <section className="sec">
+          <div className="sec-row">
+            <h2>{area ? (lang === "en" ? `${prefLabel(area, lang)}: ` : `${prefLabel(area, lang)}・`) : ""}{t(lang, "endingSoon")}<small>{t(lang, "endingSoonLead")}</small></h2>
+            <Link className="more" href={`/events${toSearch({ when: "ending", ...areaQ })}`}>{ending.length}{t(lang, "seeAll")}</Link>
+          </div>
+          <EventGrid lang={lang} events={ending.slice(0, 4)} />
+        </section>
+      )}
 
       {AGE_SECTIONS.map((s) => (
         <section className="sec" key={s.key}>

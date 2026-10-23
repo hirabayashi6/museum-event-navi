@@ -20,6 +20,7 @@ export function SideMenu({ lang, pref }: { lang: Lang; pref: string }) {
         <li><Link href="/events?when=tomorrow">{t(lang, "tomorrow")}</Link></li>
         <li><Link href="/events?when=this-weekend">{t(lang, "thisWeekend")}</Link></li>
         <li><Link href="/events?when=next-weekend">{t(lang, "nextWeekend")}</Link></li>
+        <li><Link href="/events?when=ending">{t(lang, "endingSoon")}</Link></li>
         <li><Link href="/events?when=冬休み">{t(lang, "winter")}</Link></li>
         <li><Link href="/events">{t(lang, "anytime")}</Link></li>
       </ul>

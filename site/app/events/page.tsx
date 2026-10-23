@@ -35,7 +35,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
   const events = applyFilters(await getEvents(), f);
   const range = rangeOf(f);
   const where = f.pref ? prefLabel(f.pref, lang) : t(lang, "allJapan");
-  const when = range ? fmtRange(range.from, range.to === range.from ? null : range.to, lang) : t(lang, "upcoming");
+  const when = f.when === "ending" ? t(lang, "endingSoon") : range ? fmtRange(range.from, range.to === range.from ? null : range.to, lang) : t(lang, "upcoming");
   const label = [f.q && `「${f.q}」`, where, when].filter(Boolean).join(lang === "en" ? " · " : "・");
 
   return (

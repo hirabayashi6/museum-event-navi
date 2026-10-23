@@ -360,3 +360,4 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .geo-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; font: inherit; font-weight: 700; font-size: .88rem; color: var(--ink); background: none; border: 0; border-bottom: 1px solid var(--ink); border-radius: 0; padding: 4px 0; cursor: pointer; }
 .geo-btn:hover { color: var(--accent); border-bottom-color: var(--accent); }
 .geo-msg { margin: 0; }
+.closed-text { margin: 0 0 6px; font-weight: 700; line-height: 1.7; }

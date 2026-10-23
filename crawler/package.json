@@ -15,7 +15,9 @@
     "repair": "tsx src/repair-titles.ts",
     "amenities": "tsx src/amenities.ts",
     "verify": "tsx src/verify.ts",
-    "facebook": "tsx src/facebook.ts"
+    "facebook": "tsx src/facebook.ts",
+    "exhibit-pages": "tsx src/exhibit-pages.ts",
+    "closed-days": "tsx src/closed-days.ts"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

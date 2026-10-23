@@ -1,10 +1,11 @@
-// 段階2 巡回：イベントページを取得し、前回から増えた行だけを「変更」として書き出す
-// 使い方: npm run crawl -- [--pref 宮崎県] [--concurrency 8]
+// 段階2 巡回：イベントページと展覧会ページを取得し、前回から増えた行だけを「変更」として書き出す
+// 記録（state・snapshots）はページごと（イベントページは No、展覧会ページは No-ex）。変更は館（No）にまとめる
+// 使い方: npm run crawl -- [--pref 宮崎県] [--concurrency 8] [--force] [--only-exhibit]
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { politeFetch, mapLimit } from "./lib/http.js";
-import { loadMaster, argValue } from "./lib/museums.js";
+import { loadMaster, argValue, type Row } from "./lib/museums.js";
 import { pageLines, pageLinks, pageHeading, ldEventLines } from "./lib/text.js";
 import { kindOf } from "./lib/classify.js";
 import { findDates } from "./lib/jpdate.js";
@@ -50,12 +51,25 @@ async function main(): Promise<void> {
   const state = readJson<Record<string, State>>(STATE, {});
   // 直近12時間以内に取得した館は飛ばす（途中で止まった回の続きから再開できる）
   const recent = Date.now() - 12 * 3_600_000;
-  const targets = loadMaster().filter((r) => {
-    if (!(r["イベントページURL"] ?? "").startsWith("http") || (pref && r["都道府県"] !== pref)) return false;
-    const st = state[r["No."] ?? ""];
-    return !(st && Date.parse(st.lastFetched) > recent && !process.argv.includes("--force"));
-  });
-  console.log(`巡回対象 ${targets.length}館`);
+  // 巡回するページの一覧（館ごとにイベントページと、あれば展覧会ページ）
+  type Job = { r: Row; key: string; url: string };
+  const onlyEx = process.argv.includes("--only-exhibit");
+  const targets: Job[] = loadMaster()
+    .filter((r) => (r["イベントページURL"] ?? "").startsWith("http") && (!pref || r["都道府県"] === pref))
+    .flatMap((r): Job[] => {
+      const no = r["No."] ?? "";
+      const ev = (r["イベントページURL"] ?? "").split(/\s+/)[0] ?? "";
+      const ex = (r["展覧会ページURL"] ?? "").split(/\s+/)[0] ?? "";
+      return [
+        ...(onlyEx ? [] : [{ r, key: no, url: ev }]),
+        ...(ex.startsWith("http") ? [{ r, key: `${no}-ex`, url: ex }] : []),
+      ];
+    })
+    .filter((j) => {
+      const st = state[j.key];
+      return !(st && Date.parse(st.lastFetched) > recent && !process.argv.includes("--force"));
+    });
+  console.log(`巡回対象 ${targets.length}ページ（${new Set(targets.map((j) => j.r["No."])).size}館）`);
   const changes: Change[] = [];
   const now = new Date().toISOString();
   let done = 0;
@@ -65,15 +79,14 @@ async function main(): Promise<void> {
     fs.writeFileSync(STATE, JSON.stringify(state, null, 1));
     fs.writeFileSync(changesFile, JSON.stringify(changes, null, 1));
   };
-  await mapLimit(targets, conc, async (r) => {
+  await mapLimit(targets, conc, async ({ r, key, url }) => {
     if (++done % 50 === 0) { checkpoint(); console.log(`  ${done}/${targets.length}`); }
     const no = r["No."] ?? "";
-    const url = (r["イベントページURL"] ?? "").split(/\s+/)[0] ?? "";
     // --force のときは前回の記録を使わず、全ページを初回として詳細まで読み直す
-    const prev = process.argv.includes("--force") ? undefined : state[no];
+    const prev = process.argv.includes("--force") ? undefined : state[key];
     const res = await politeFetch(url);
     if (!res.ok) {
-      state[no] = { url, hash: prev?.hash ?? "", lastFetched: now, lastChanged: prev?.lastChanged ?? "", status: "失敗", detail: res.detail };
+      state[key] = { url, hash: prev?.hash ?? "", lastFetched: now, lastChanged: prev?.lastChanged ?? "", status: "失敗", detail: res.detail };
       return;
     }
     const lines = pageLines(res.html);
@@ -81,9 +94,9 @@ async function main(): Promise<void> {
     if (res.html.includes("tribe-events")) lines.push(...(await tribeLines(res.url)));
     const text = lines.join("\n");
     const hash = crypto.createHash("sha256").update(text).digest("hex");
-    const snapFile = path.join(SNAP, `${no}.txt`);
+    const snapFile = path.join(SNAP, `${key}.txt`);
     if (prev?.hash === hash) {
-      state[no] = { ...prev, lastFetched: now, status: "変化なし", detail: "" };
+      state[key] = { ...prev, lastFetched: now, status: "変化なし", detail: "" };
       return;
     }
     // 状態が記録されていない館は、古い本文が残っていても初回として扱う（途中停止した回の取りこぼし防止）
@@ -113,14 +126,14 @@ async function main(): Promise<void> {
     addedLines.push(...ldEventLines(res.html, res.url).filter((x) => !before.has(x)));
     const added = [...addedLines, ...details].join("\n").slice(0, MAX_CHARS);
     fs.writeFileSync(snapFile, text);
-    state[no] = { url, hash, lastFetched: now, lastChanged: now, status: prev ? "変化あり" : "初回", detail: "" };
+    state[key] = { url, hash, lastFetched: now, lastChanged: now, status: prev ? "変化あり" : "初回", detail: "" };
     if (added.trim()) {
       changes.push({ no, name: r["博物館名"] ?? "", pref: r["都道府県"] ?? "", city: r["市町村"] ?? "", url: res.url, first: !prev, added });
     }
   });
   checkpoint();
   const out = changesFile;
-  const tally = (s: string) => targets.filter((t) => state[t["No."] ?? ""]?.status === s).length;
+  const tally = (s: string) => targets.filter((t) => state[t.key]?.status === s).length;
   console.log(`初回 ${tally("初回")} / 変化あり ${tally("変化あり")} / 変化なし ${tally("変化なし")} / 失敗 ${tally("失敗")}`);
   console.log(`構造化に回す変更: ${changes.length}件 → ${path.relative(process.cwd(), out)}`);
 }

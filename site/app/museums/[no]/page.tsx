@@ -36,6 +36,13 @@ export default async function MuseumPage({ params }: Props) {
         </div>
         <span className="genre-m" aria-hidden="true" />
       </div>
+      {m.closed && (
+        <section className="amen">
+          <h2>{t(lang, "closedDays")}</h2>
+          <p className="closed-text">{m.closed}</p>
+          <p className="note">{t(lang, "closedNote")}</p>
+        </section>
+      )}
       {m.amen && (m.amen.nursing || m.amen.toilet || m.amen.diaper || m.amen.stroller) && (
         <section className="amen">
           <h2>{t(lang, "facilities")}</h2>

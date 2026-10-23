@@ -51,6 +51,8 @@ export default async function EventPage({ params }: Props) {
     [t(lang, "date"), fmtRange(e.start_date, e.end_date, lang)],
     [t(lang, "time"), e.time],
     [t(lang, "venue"), `${e.museum}${e.place ? `　${e.place}` : ""}`],
+    // 休館日は分かる館だけ（分からない館は「見つからなかった項目」に入れない）
+    ...(m?.closed ? [[t(lang, "closedDays"), m.closed] as [string, string]] : []),
     [t(lang, "kind"), e.kind ? kindLabel(e.kind, lang) : null],
     [t(lang, "target"), e.audience.length ? e.audience.map((a) => audLabel(a, lang)).join(lang === "en" ? ", " : "・") : null],
     [t(lang, "fee"), e.fee ? feeLabel(e.fee, lang) : null],

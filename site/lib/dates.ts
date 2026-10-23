@@ -7,7 +7,7 @@ export function todayJst(): string {
   return new Date(Date.now() + JST).toISOString().slice(0, 10);
 }
 
-function addDays(iso: string, n: number): string {
+export function addDays(iso: string, n: number): string {
   return new Date(Date.parse(`${iso}T00:00:00Z`) + n * DAY).toISOString().slice(0, 10);
 }
 

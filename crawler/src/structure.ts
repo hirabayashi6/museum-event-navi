@@ -90,6 +90,28 @@ function cleanTitle(s: string): string {
   return core.length < 3 || GENERIC_TITLE.test(core) ? "" : t2;
 }
 
+// 日付の行に残りがちな「状態」「場所」の言葉
+const STATUS_WORDS = /開催中|開催予定|近日開催|近日公開|会期中|終了|予告|会期|会場|NEW|New|[0-9・,、]+階|[^\s]{0,8}展示室|ギャラリー\s*[0-9A-Z]?|ホール|\b(Sun|Mon|Tue|Wed|Thu|Fri|Sat)(day|\.)?\b|[-–]/g;
+const STATUS_ONLY = /^[\s:：・,、()（）]*$/;
+const SUBTITLE_HEAD = /(展|展覧会|フェア|フェスタ|コレクション)$/;
+
+// 日付の行の上にある題名を探す。英語だけの行は飛ばし、「○○展」の次の行が副題ならつなげる
+function titleAbove(lines: string[], i: number): string {
+  const above: string[] = [];
+  for (let k = i - 1; k >= 0 && above.length < 2 && k >= i - 3; k--) {
+    const raw = lines[k] ?? "";
+    if (findDates(raw).length) break; // 前の催しの日付行まで来たら止める
+    if (/^[A-Za-z0-9\s:;,.'’&!?\-–()]+$/.test(raw.trim())) continue; // 英語の題名だけの行
+    const t = cleanTitle(raw);
+    if (t) above.unshift(t);
+  }
+  const [a, b] = above.length === 2 ? above : [undefined, above[0]];
+  if (a && b && SUBTITLE_HEAD.test(a) && !/展|祭|会|教室|講座/.test(b)) return `${a} ${b}`;
+  // 「隙あらば猫／町田尚子絵本原画展」のように、短い副題が先に来る書き方
+  if (a && b && SUBTITLE_HEAD.test(b) && !SUBTITLE_HEAD.test(a) && a.length <= 15) return `${a} ${b}`;
+  return b ?? "";
+}
+
 function make(c: Change, base: Omit<NaviEvent, "id" | "no" | "museum" | "pref" | "city" | "extracted_at">): NaviEvent {
   return { ...base, id: idOf(c.no, base.title, base.start_date), no: c.no, museum: c.name, pref: c.pref, city: c.city, extracted_at: new Date().toISOString() };
 }
@@ -147,10 +169,12 @@ export function structure(c: Change): NaviEvent[] {
     const hits = findDates(line);
     if (!hits.length) continue;
     // 題名の次の行に会期だけが書かれている場合は、前の行を題名にする（掲載日だけの行は除く）
+    // 「開催中」「3階展示室」のような状態・場所の言葉だけが残った行は、題名がない行として扱う
     let title = cleanTitle(line);
+    const rest = title.replace(STATUS_WORDS, "").replace(/[\d.\/:：()（）~～\s]+/g, "").trim();
+    if (STATUS_ONLY.test(rest) || rest.length < 3) title = "";
     const i = listLines.indexOf(line);
-    const prev = i > 0 ? cleanTitle(listLines[i - 1] ?? "") : "";
-    if (!title && prev && (/会期|期間|日時|開催|～/.test(line))) title = prev;
+    if (!title && (parseRange(line)?.end || /会期|期間|日時|開催|～/.test(toHalfWidth(line)))) title = titleAbove(listLines, i);
     if (title.length < 4 || NOT_EVENT.test(title)) continue;
     const range = parseRange(line);
     const isRange = Boolean(range?.end);
