@@ -82,6 +82,26 @@ ${items.map((x, i) => `${i}: [${x.museum["博物館名"] ?? ""}／投稿日 ${x.
   return out;
 }
 
+// 決まりによる読み取り（無料LLMの枠が尽きた投稿用）。「」の中の名前か、催しらしい1行目を題名にする
+const EVENT_HINT = /ワークショップ|体験|教室|講座|イベント|開催|展|ツアー|おはなし|読み聞かせ|ガイド|観察|上映|コンサート|まつり|祭|フェス|募集|工作|ギャラリートーク/;
+const NOT_EVENT_POST = /休館|臨時休館|開館時間|営業時間|求人|採用|グッズ|販売中|入荷|終了しました|ありがとうございました|ご来場ありがとう/;
+export function ruleRead(text: string): Read {
+  const none: Read = { title: NONE, start: null, end: null };
+  if (!EVENT_HINT.test(text) || NOT_EVENT_POST.test(text)) return none;
+  const t = today();
+  const lines = text.split(/\n/).map((l) => l.trim()).filter(Boolean);
+  const dateLine = lines.find((l) => findDates(l).some((h) => h.date >= t));
+  const range = dateLine ? parseRange(dateLine) : null;
+  if (!range) return none;
+  const clean = (s: string) => s.replace(/#\S+/g, "").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, "").replace(/[\s　]+/g, " ").trim();
+  const ok = (q: string) => q.length >= 4 && !findDates(q).length && !/お知らせ|ご案内|開館|休館/.test(q);
+  // 「」『』の中の名前を優先し、なければ【】の中、なければ催しらしい1行目
+  const quoted = [...text.matchAll(/[「『]([^」』\n]{4,30})[」』]/g), ...text.matchAll(/【([^】\n]{4,30})】/g)].map((m) => clean(m[1] ?? "")).find(ok);
+  const first = lines.map(clean).map((l) => l.replace(/を?(開催|実施)(します|いたします|中)[!！。]*$/, "")).find((l) => l.length >= 4 && l.length <= 30 && !findDates(l).length && EVENT_HINT.test(l));
+  const title = quoted ?? first;
+  return title ? { title, start: range.start, end: range.end } : none;
+}
+
 // これから先の日付が書かれた投稿だけを、まだ読んでいなければ読む。結果は投稿のURLごとに cache に残す
 export async function readPosts(platform: Platform, posts: SnsPost[], cacheFile: string): Promise<{ future: SnsPost[]; cache: Record<string, Read> }> {
   const cache = load<Record<string, Read>>(cacheFile, {});
@@ -98,7 +118,12 @@ export async function readPosts(platform: Platform, posts: SnsPost[], cacheFile:
       fs.writeFileSync(cacheFile, JSON.stringify(cache));
     }
   }
-  return { future, cache };
+  // LLMで読めなかった投稿は決まりで読む（cache には入れず、次回 LLM に読み直してもらう）
+  const rule: Record<string, Read> = {};
+  for (const p of future) if (!(p.url in cache)) rule[p.url] = ruleRead(p.text);
+  const ruled = Object.values(rule).filter((r) => r.title !== NONE).length;
+  if (Object.keys(rule).length) console.log(`  LLMで読めなかった ${Object.keys(rule).length}件は決まりで読み、催しらしいもの ${ruled}件`);
+  return { future, cache: { ...rule, ...cache } };
 }
 
 // LLMの日付が本文の日付と合うかを確かめ、合わなければ本文から読み直す（日付の作り話を防ぐ）
@@ -137,7 +162,9 @@ export function addEvents(platform: Platform, future: SnsPost[], cache: Record<s
     const f = path.join(evDir, `${no}.json`);
     const old = load<NaviEvent[]>(f, []).filter((e) => (e.end_date ?? e.start_date) >= t);
     const web = old.filter((e) => e.method !== "Instagram" && e.method !== "Facebook");
-    const merged = new Map(old.map((e) => [e.id, e]));
+    // 同じ投稿から前に作った催し（決まりで読んだもの・題名が変わったもの）は置き換える
+    const freshUrls = new Set(fresh.map((e) => e.source_url));
+    const merged = new Map(old.filter((e) => !(e.method === platform && freshUrls.has(e.source_url))).map((e) => [e.id, e]));
     for (const e of fresh) {
       if (web.some((w) => w.start_date === e.start_date && similar(w.title, e.title))) continue;
       if (!merged.has(e.id)) added++;

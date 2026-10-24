@@ -1,5 +1,5 @@
 // Instagram の巡回：館のアカウントの最近の投稿から、これからある催しを拾う（Business Discovery を使う）
-// 使い方: npm run instagram -- [--limit 300] [--guess] [--only 1234]
+// 使い方: npm run instagram -- [--limit 300] [--guess] [--only 1234] [--refetch]
 //   --guess … 名簿にアカウントがない館について、公式サイトのドメインからアカウント名を推測して試す
 // 出力: data/sns/instagram.json（アカウントの確認結果）、data/events/{No}.json（method "Instagram" の催し）
 // 投稿の本文や写真は転載しない。催しの名前・日付などの事実と、元の投稿へのリンクだけを載せる
@@ -102,7 +102,8 @@ async function main(): Promise<void> {
   // 確認済みは投稿を取り直す（1日1回）。新しい候補はそのあと
   const due = jobs.filter((j) => {
     const a = store[j.r["No."] ?? ""]?.find((x) => x.username === j.username && x.status === "確認済");
-    return !a?.postsAt || daysAgo(a.postsAt) >= 0.8;
+    // --refetch のときは、今日取った分も取り直す（読み取りに失敗した回のやり直し用）
+    return process.argv.includes("--refetch") || !a?.postsAt || daysAgo(a.postsAt) >= 0.8;
   });
   due.sort((a, b) => Number(Boolean(store[b.r["No."] ?? ""]?.some((x) => x.status === "確認済"))) - Number(Boolean(store[a.r["No."] ?? ""]?.some((x) => x.status === "確認済"))));
   console.log(`Instagram：調べる組 ${due.length}件（今回は ${Math.min(limit, due.length)}件まで、1件あたり約${Math.round(INTERVAL_MS / 1000)}秒）`);
@@ -139,7 +140,8 @@ async function main(): Promise<void> {
       const got = await discover(j.username);
       calls++;
       if (got === "limit") { console.log("Instagramの上限に達しました。続きは次回"); break; }
-      if (got === "offline") { offline++; if (offline >= 5) { console.log("通信できない状態が続くため中断。続きは次回"); break; } continue; }
+      // 通信が途切れたら1分待って次へ（Macのスリープや回線の一時的な切断に備える）。20回続いたら中断
+      if (got === "offline") { offline++; if (offline >= 20) { console.log("通信できない状態が続くため中断。続きは次回"); break; } await sleep(60_000); continue; }
       offline = 0;
       p = got;
       fetched.set(j.username, p);
