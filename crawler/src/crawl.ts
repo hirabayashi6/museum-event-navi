@@ -1,6 +1,6 @@
 // 段階2 巡回：イベントページと展覧会ページを取得し、前回から増えた行だけを「変更」として書き出す
 // 記録（state・snapshots）はページごと（イベントページは No、展覧会ページは No-ex）。変更は館（No）にまとめる
-// 使い方: npm run crawl -- [--pref 宮崎県] [--concurrency 8] [--force] [--only-exhibit]
+// 使い方: npm run crawl -- [--pref 宮崎県] [--concurrency 8] [--force] [--only-exhibit] [--min-no 5001]
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -55,7 +55,8 @@ async function main(): Promise<void> {
   type Job = { r: Row; key: string; url: string };
   const onlyEx = process.argv.includes("--only-exhibit");
   const targets: Job[] = loadMaster()
-    .filter((r) => (r["イベントページURL"] ?? "").startsWith("http") && (!pref || r["都道府県"] === pref))
+    // --min-no 5001 … 番号がそれ以上の館だけ（名簿に新しく足した館の初回巡回用）
+    .filter((r) => (r["イベントページURL"] ?? "").startsWith("http") && (!pref || r["都道府県"] === pref) && Number(r["No."] ?? 0) >= Number(argValue("min-no") ?? 0))
     .flatMap((r): Job[] => {
       const no = r["No."] ?? "";
       const ev = (r["イベントページURL"] ?? "").split(/\s+/)[0] ?? "";

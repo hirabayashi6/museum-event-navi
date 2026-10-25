@@ -37,6 +37,9 @@ function collect(): { events: NaviEvent[]; museums: SiteMuseum[] } {
     .filter((e) => !rejectReason(e))
     // 元の文章（raw）は題名の作り直しにだけ使い、公開データには入れない
     .map(({ raw: _raw, ...e }) => ({ ...e, title: cleanPublicTitle(e.title), category: category.get(e.no) ?? "" }))
+    // 同じ館・同じ題名・同じ開始日は1件にまとめる（一覧・詳細・SNSで同じ催しを拾った場合など）。確かさの高いものを残す
+    .sort((a, b) => b.confidence - a.confidence)
+    .filter((e, i, all) => all.findIndex((x) => x.no === e.no && x.title === e.title && x.start_date === e.start_date) === i)
     .sort((a, b) => a.start_date.localeCompare(b.start_date));
   console.log(`公開 ${live.length}件 / 要確認 ${review.length}件`);
   const nos = new Set(live.map((e) => e.no));
