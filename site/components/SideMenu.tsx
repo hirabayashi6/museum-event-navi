@@ -3,7 +3,8 @@ import { WANTS, type Want } from "@/lib/types";
 import { GENRES } from "@/lib/genres";
 import { toSearch } from "@/lib/filters";
 import { AGE_TO_AUD, type AgeKey } from "@/lib/kids";
-import { t, wantLabel, genreLabel, type Lang, type UIKey } from "@/lib/i18n";
+import { t, wantLabel, genreLabel, BREAK_KEY, type Lang, type UIKey } from "@/lib/i18n";
+import { nextBreak } from "@/lib/dates";
 import { AreaPicker } from "./AreaPicker";
 
 const AGES: [AgeKey, UIKey][] = [["baby", "ageBaby"], ["low", "ageLow"], ["high", "ageHigh"]];
@@ -21,7 +22,7 @@ export function SideMenu({ lang, pref }: { lang: Lang; pref: string }) {
         <li><Link href="/events?when=this-weekend">{t(lang, "thisWeekend")}</Link></li>
         <li><Link href="/events?when=next-weekend">{t(lang, "nextWeekend")}</Link></li>
         <li><Link href="/events?when=ending">{t(lang, "endingSoon")}</Link></li>
-        <li><Link href="/events?when=冬休み">{t(lang, "winter")}</Link></li>
+        <li><Link href={`/events?when=${encodeURIComponent(nextBreak())}`}>{t(lang, BREAK_KEY[nextBreak()])}</Link></li>
         <li><Link href="/events">{t(lang, "anytime")}</Link></li>
       </ul>
       {lang === "easy" ? (

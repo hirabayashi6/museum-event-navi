@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { Query } from "@/lib/filters";
 import { WANTS, type Want } from "@/lib/types";
-import { t, wantLabel, type Lang, type UIKey } from "@/lib/i18n";
+import { t, wantLabel, BREAK_KEY, type Lang, type UIKey } from "@/lib/i18n";
+import { nextBreak } from "@/lib/dates";
 import { PrefSelect } from "./PrefSelect";
 
 // 一覧の上の絞り込み。開かずに、押すだけで切り替わる（同じものをもう一度押すと解除）
@@ -34,7 +35,7 @@ function Row({ label, items }: { label: string; items: { text: string; to: strin
 export function FilterBar({ q, lang }: { q: Query; lang: Lang }) {
   const get = (k: string) => list(q[k])[0] ?? "";
   const toggle = (key: string, value: string, drop: string[] = []) => ({ to: get(key) === value ? href(q, key, null, drop) : href(q, key, value, drop), on: get(key) === value });
-  const WHEN: [string, UIKey][] = [["today", "today"], ["tomorrow", "tomorrow"], ["this-weekend", "thisWeekend"], ["next-weekend", "nextWeekend"], ["ending", "endingSoon"], ["冬休み", "winter"]];
+  const WHEN: [string, UIKey][] = [["today", "today"], ["tomorrow", "tomorrow"], ["this-weekend", "thisWeekend"], ["next-weekend", "nextWeekend"], ["ending", "endingSoon"], [nextBreak(), BREAK_KEY[nextBreak()]]];
   const AGES: [string, UIKey][] = [["baby", "ageBaby"], ["low", "ageLow"], ["high", "ageHigh"]];
   return (
     <div className="fb">

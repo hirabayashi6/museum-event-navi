@@ -243,9 +243,11 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .area-wants a { padding: 12px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); font-family: var(--round); font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
 .area-wants a span { font-family: var(--num); font-weight: 700; color: var(--sub); font-size: .8rem; }
 .area-wants a:hover { background: var(--cream); }
-.area-museums { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); border-top: 1px solid var(--line); }
-.area-museums a { display: flex; align-items: center; gap: 8px; padding: 9px 4px; border-bottom: 1px solid var(--line); font-size: .88rem; }
-.area-museums small { color: var(--sub); margin-left: auto; font-size: .75rem; }
+.area-museums { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); column-gap: 16px; border-top: 1px solid var(--line); }
+/* 同じ行の高さをそろえ、市の名前は折り返さない（館名だけ折り返す） */
+.area-museums li { display: flex; }
+.area-museums a { flex: 1; display: flex; align-items: center; gap: 8px; padding: 9px 4px; border-bottom: 1px solid var(--line); font-size: .88rem; min-width: 0; }
+.area-museums small { color: var(--sub); margin-left: auto; font-size: .75rem; white-space: nowrap; flex-shrink: 0; padding-left: 6px; }
 .foot-prefs { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 10px; max-width: 900px; margin: 0 auto 18px; font-size: .78rem; }
 .foot-prefs a { margin: 0; color: var(--sub); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -361,3 +363,4 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .geo-btn:hover { color: var(--accent); border-bottom-color: var(--accent); }
 .geo-msg { margin: 0; }
 .closed-text { margin: 0 0 6px; font-weight: 700; line-height: 1.7; }
+.area-museums .swatch { flex-shrink: 0; }

@@ -103,6 +103,8 @@ function titleAbove(lines: string[], i: number): string {
     const raw = lines[k] ?? "";
     if (findDates(raw).length) break; // 前の催しの日付行まで来たら止める
     if (/^[A-Za-z0-9\s:;,.'’&!?\-–()]+$/.test(raw.trim())) continue; // 英語の題名だけの行
+    // 「雨天中止」「※〜」「詳しくはこちら」のような注意書きや、長い説明文の行は題名にしない
+    if (/^[※＊*]|雨天|中止|延期|先着|要予約|予約不要|申込|定員|詳しくは|こちら|MAP$|^対象|^参加費|^料金/.test(raw.trim()) || raw.trim().length > 40) continue;
     const t = cleanTitle(raw);
     if (t) above.unshift(t);
   }
@@ -111,6 +113,40 @@ function titleAbove(lines: string[], i: number): string {
   // 「隙あらば猫／町田尚子絵本原画展」のように、短い副題が先に来る書き方
   if (a && b && SUBTITLE_HEAD.test(b) && !SUBTITLE_HEAD.test(a) && a.length <= 15) return `${a} ${b}`;
   return b ?? "";
+}
+
+// 一覧の行からイベントを取り出す。block は「題名 → 注意書き → 日付 → 時間・場所・料金」のように
+// 1件ずつまとまって並ぶページ（詳細ページだと思って開いたら一覧だった場合）で、日付だけの行の上を題名とみなす
+function listEvents(c: Change, lines: string[], url: string, block: boolean, skip: Set<string> = new Set()): NaviEvent[] {
+  const out: NaviEvent[] = [];
+  for (const [i, line] of lines.entries()) {
+    if (line.startsWith("【予定】") || skip.has(line) || /掲載|更新日|投稿|締切|締め切り/.test(line)) continue;
+    const hits = findDates(line);
+    if (!hits.length) continue;
+    // 題名の次の行に会期だけが書かれている場合は、前の行を題名にする（掲載日だけの行は除く）
+    // 「開催中」「3階展示室」のような状態・場所の言葉だけが残った行は、題名がない行として扱う
+    let title = cleanTitle(line);
+    const rest = title.replace(STATUS_WORDS, "").replace(/[\d.\/:：()（）~～\s、,・月日土日祝]+/g, "").trim();
+    if (STATUS_ONLY.test(rest) || rest.length < 3) title = "";
+    if (!title && (block || parseRange(line)?.end || /会期|期間|日時|開催|～/.test(toHalfWidth(line)))) title = titleAbove(lines, i);
+    if (title.length < 4 || NOT_EVENT.test(title)) continue;
+    const range = parseRange(line);
+    const isRange = Boolean(range?.end);
+    // 「11/22(日) 12/6(日) どんぐりやじろべぇ」のように範囲でない複数日付は、日付ごとに1件
+    const dates = isRange && range ? [range] : hits.map((h) => ({ start: h.date, end: null as string | null }));
+    // まとまって並ぶページでは、すぐ下の数行（時間・場所・料金）も読む
+    const below = block ? lines.slice(i + 1, i + 6).filter((l) => !findDates(l).length).join(" ") : "";
+    for (const d of dates) {
+      out.push(make(c, {
+        title, kind: kindOf(title), start_date: d.start, end_date: d.end, time: timeOf(line) ?? (block ? timeOf(below) : null),
+        audience: audienceOf(`${line} ${below}`), fee: feeOf(line) ?? (block ? feeOf(below) : null), reservation: reservationOf(`${line} ${below}`), place: null,
+        capacity: null, deadline: null, apply: null, bring: null, lecturer: null,
+        source_url: url, method: "一覧", confidence: block ? 0.8 : 0.75,
+        raw: [lines[i - 1], line, lines[i + 1]].filter(Boolean).join(" ／ ").slice(0, 240),
+      }));
+    }
+  }
+  return out;
 }
 
 function make(c: Change, base: Omit<NaviEvent, "id" | "no" | "museum" | "pref" | "city" | "extracted_at">): NaviEvent {
@@ -145,6 +181,9 @@ export function structure(c: Change): NaviEvent[] {
     const urlLine = all.find((x) => x.startsWith("【URL】"));
     const lines = all.filter((x) => !x.startsWith("【URL】") && !x.startsWith("【予定】"));
     const detailUrl = urlLine ? urlLine.slice(5) : c.url;
+    // 詳細ページだと思って開いたら、イベントがいくつも並ぶ一覧だった場合（日付だけの行が2つ以上）
+    const dateOnly = lines.filter((l) => findDates(l).length && cleanTitle(l).replace(STATUS_WORDS, "").replace(/[\d.\/:：()（）~～\s、,・月日土日祝]+/g, "").trim().length < 3).length;
+    if (dateOnly >= 2) { detailTitles.add(lines[0] ?? ""); out.push(...listEvents(c, lines.slice(1), detailUrl, true)); continue; }
     // 構造化データ（【予定】）がある詳細ページは、そちらを正とする
     if (all.some((x) => x.startsWith("【予定】"))) { detailTitles.add(lines[0] ?? ""); continue; }
     const title = cleanTitle(lines[0] ?? "");
@@ -165,32 +204,7 @@ export function structure(c: Change): NaviEvent[] {
   }
 
   // 3. 一覧の行：日付と題名が同じ行にあるもの（日付だけの行は掲載日なので使わない）
-  for (const line of listLines) {
-    if (line.startsWith("【予定】") || detailTitles.has(line) || /掲載|更新日|投稿|締切|締め切り/.test(line)) continue;
-    const hits = findDates(line);
-    if (!hits.length) continue;
-    // 題名の次の行に会期だけが書かれている場合は、前の行を題名にする（掲載日だけの行は除く）
-    // 「開催中」「3階展示室」のような状態・場所の言葉だけが残った行は、題名がない行として扱う
-    let title = cleanTitle(line);
-    const rest = title.replace(STATUS_WORDS, "").replace(/[\d.\/:：()（）~～\s]+/g, "").trim();
-    if (STATUS_ONLY.test(rest) || rest.length < 3) title = "";
-    const i = listLines.indexOf(line);
-    if (!title && (parseRange(line)?.end || /会期|期間|日時|開催|～/.test(toHalfWidth(line)))) title = titleAbove(listLines, i);
-    if (title.length < 4 || NOT_EVENT.test(title)) continue;
-    const range = parseRange(line);
-    const isRange = Boolean(range?.end);
-    // 「11/22(日) 12/6(日) どんぐりやじろべぇ」のように範囲でない複数日付は、日付ごとに1件
-    const dates = isRange && range ? [range] : hits.map((h) => ({ start: h.date, end: null as string | null }));
-    for (const d of dates) {
-      out.push(make(c, {
-        title, kind: kindOf(title), start_date: d.start, end_date: d.end, time: timeOf(line),
-        audience: audienceOf(line), fee: feeOf(line), reservation: reservationOf(line), place: null,
-        capacity: null, deadline: null, apply: null, bring: null, lecturer: null,
-        source_url: c.url, method: "一覧", confidence: 0.75,
-        raw: [listLines[i - 1], line, listLines[i + 1]].filter(Boolean).join(" ／ ").slice(0, 240),
-      }));
-    }
-  }
+  out.push(...listEvents(c, listLines, c.url, false, detailTitles));
 
   // 終わった催しは除き、同じ題名・同じ開始日はまとめる
   const t = today();

@@ -49,9 +49,17 @@ export const SEASONS = {
 } as const;
 export type Season = keyof typeof SEASONS;
 
+// 次に来る（または今の）長いお休み。終わっていない休みのうち、いちばん早く始まるもの
+export function nextBreak(): Season {
+  return (Object.keys(SEASONS) as Season[]).map((s) => [s, seasonRange(s)] as const).sort((a, b) => a[1].from.localeCompare(b[1].from))[0]?.[0] ?? "冬休み";
+}
+
 export function seasonRange(s: Season): { from: string; to: string } {
   const t = todayJst();
   const y = Number(t.slice(0, 4));
+  // 年をまたぐ休み（冬休み）は、前の年から続いている分も見る
+  const prev = SEASONS[s](y - 1);
+  if (prev.to >= t) return prev;
   const r = SEASONS[s](y);
   return r.to < t ? SEASONS[s](y + 1) : r;
 }

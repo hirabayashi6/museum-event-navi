@@ -1,6 +1,6 @@
 // 段階2 巡回：イベントページと展覧会ページを取得し、前回から増えた行だけを「変更」として書き出す
 // 記録（state・snapshots）はページごと（イベントページは No、展覧会ページは No-ex）。変更は館（No）にまとめる
-// 使い方: npm run crawl -- [--pref 宮崎県] [--concurrency 8] [--force] [--only-exhibit] [--min-no 5001]
+// 使い方: npm run crawl -- [--pref 宮崎県] [--concurrency 8] [--force] [--only-exhibit] [--min-no 5001] [--no 5221]
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -20,9 +20,11 @@ const STATE = path.join(DIR, "state.json");
 const SNAP = path.join(DIR, "snapshots");
 const MAX_CHARS = 40000; // 構造化側で分割して送る
 const MAX_DETAILS = 30; // 1館1回あたりに読みに行く詳細ページの上限
-const DETAIL_CHARS = 2000;
+const DETAIL_CHARS = 6000; // 詳細だと思ったら一覧だったページも読めるよう、長めに取る
 // 催しの詳細へのリンクらしい行（題名に催しの言葉があるか、日付が近くにある）
 const EVENT_WORDS = /ワークショップ|体験|教室|講座|講演|観察|展|ツアー|トーク|コンサート|上映|おはなし|読み聞かせ|まつり|祭|フェス|イベント|ショー|セミナー|見学|作ろう|つくろう|募集/;
+// ページ共通の見出し（催しの名前ではない）。詳細ページの見出しがこれなら、一覧のリンクの文字を題名にする
+const GENERIC_HEADING = /(イベント|催し|行事|講座)(情報|一覧|カレンダー|案内|のご案内)|新着情報|お知らせ|トピックス|ニュース|^(HOME|ホーム|トップ)|[>＞›»]/;
 const NAV_LIKE = /^(HOME|ホーム|トップ|一覧|もっと見る|詳細|詳しく|こちら|次へ|前へ|戻る|ページ|お知らせ一覧|イベント一覧|.{0,2}\d+.{0,2})$/;
 
 const readJson = <T>(f: string, fallback: T): T => (fs.existsSync(f) ? (JSON.parse(fs.readFileSync(f, "utf8")) as T) : fallback);
@@ -56,7 +58,7 @@ async function main(): Promise<void> {
   const onlyEx = process.argv.includes("--only-exhibit");
   const targets: Job[] = loadMaster()
     // --min-no 5001 … 番号がそれ以上の館だけ（名簿に新しく足した館の初回巡回用）
-    .filter((r) => (r["イベントページURL"] ?? "").startsWith("http") && (!pref || r["都道府県"] === pref) && Number(r["No."] ?? 0) >= Number(argValue("min-no") ?? 0))
+    .filter((r) => (r["イベントページURL"] ?? "").startsWith("http") && (!pref || r["都道府県"] === pref) && Number(r["No."] ?? 0) >= Number(argValue("min-no") ?? 0) && (!argValue("no") || r["No."] === argValue("no")))
     .flatMap((r): Job[] => {
       const no = r["No."] ?? "";
       const ev = (r["イベントページURL"] ?? "").split(/\s+/)[0] ?? "";
@@ -106,6 +108,7 @@ async function main(): Promise<void> {
     // 増えた行が詳細ページへのリンクなら、その本文も読む（一覧に開催日がないサイト向け）
     const links = pageLinks(res.html, res.url);
     const details: string[] = [];
+    const headingsSeen = new Map<string, string>(); // 詳細ページの見出し → 最初に見たページ
     const seen = new Set<string>();
     for (const [i, l] of addedLines.entries()) {
       if (details.length >= MAX_DETAILS) break;
@@ -118,7 +121,10 @@ async function main(): Promise<void> {
       if (!d.ok) continue;
       // 題名はリンクの文字より、詳細ページの見出しを優先する
       const heading = pageHeading(d.html);
-      const title = heading && heading.length >= 4 && !NAV_LIKE.test(heading) && !heading.includes(r["博物館名"] ?? "@@") ? heading : l;
+      // 同じサイトで見出しが重なる（＝ページ共通の見出し）場合も、リンクの文字を使う
+      const shared = headingsSeen.has(heading) && headingsSeen.get(heading) !== d.url;
+      if (heading) headingsSeen.set(heading, headingsSeen.get(heading) ?? d.url);
+      const title = heading && heading.length >= 4 && !NAV_LIKE.test(heading) && !GENERIC_HEADING.test(heading) && !shared && !heading.includes(r["博物館名"] ?? "@@") ? heading : l;
       const body = pageLines(d.html).filter((x) => !before.has(x) && !lines.includes(x)).join("\n").slice(0, DETAIL_CHARS);
       const ld = ldEventLines(d.html, d.url);
       if (body || ld.length) details.push([`【詳細】${title}`, `【URL】${d.url}`, ...ld, body].join("\n"));

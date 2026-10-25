@@ -186,6 +186,8 @@ export const UI = d({
 });
 
 export type UIKey = keyof typeof UI;
+// 長いお休みの名前（季節で入れ替わるボタン用）
+export const BREAK_KEY = { 春休み: "springBreak", GW: "gw", 夏休み: "summerBreak", 冬休み: "winter" } as const satisfies Record<string, UIKey>;
 export const t = (lang: Lang, key: UIKey): string => UI[key][lang];
 
 const KIND: Record<Kind, L3> = {
