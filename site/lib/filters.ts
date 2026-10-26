@@ -1,6 +1,6 @@
 // 一覧の絞り込み。URL の検索条件（?kind=..&age=..&when=..&pref=..）をそのまま使う
 import { AUDIENCES, DEFAULT_KINDS, KINDS, WANTS, type Audience, type Kind, type NaviEvent, type Want } from "./types";
-import { overlaps, seasonRange, todayJst, weekend, dayRange, addDays, SEASONS, type Season } from "./dates";
+import { overlaps, seasonRange, todayJst, weekend, nextWeekendRange, dayRange, addDays, SEASONS, type Season } from "./dates";
 import { AGE_TO_AUD, type AgeKey } from "./kids";
 
 export type Query = Record<string, string | string[] | undefined>;
@@ -47,7 +47,7 @@ export function rangeOf(f: Filters): { from: string; to: string } | null {
   if (f.when === "today") return dayRange(0);
   if (f.when === "tomorrow") return dayRange(1);
   if (f.when === "this-weekend") return weekend(0);
-  if (f.when === "next-weekend") return weekend(1);
+  if (f.when === "next-weekend") return nextWeekendRange();
   if (f.when in SEASONS) return seasonRange(f.when as Season);
   if (f.when === "date" && /^\d{4}-\d{2}-\d{2}$/.test(f.date)) return { from: f.date, to: f.date };
   return null;

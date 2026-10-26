@@ -62,7 +62,7 @@ export const UI = d({
   closedNote: { ja: "公式サイトの記載です。臨時休館もあるので、お出かけ前にご確認ください。", en: "As written (in Japanese) on the official website. Please check before you go.", easy: "はくぶつかんの サイトに 書いて あった ことです。 行く 前に たしかめて ください。" },
   endingSoonLead: { ja: "2週間以内に終わる展示・催し", en: "Ending within 2 weeks", easy: "2週間で おわる もの" },
   tomorrow: { ja: "明日", en: "Tomorrow", easy: "あした" },
-  nextWeekend: { ja: "その次の休み", en: "The holidays after", easy: "その つぎの 休み" },
+  nextWeekend: { ja: "来週末", en: "Next weekend", easy: "来週の 土日" },
   winter: { ja: "冬休み", en: "Winter break", easy: "冬休み" },
   anytime: { ja: "いつでも", en: "Any time", easy: "いつでも" },
   searchAll: { ja: "条件でさがす", en: "Search with filters", easy: "えらんで さがす" },

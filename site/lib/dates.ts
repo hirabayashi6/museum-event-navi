@@ -35,6 +35,20 @@ export function weekend(offsetWeeks = 0): { from: string; to: string } {
   return block ?? { from: d, to: d };
 }
 
+// 来週末：来週の土曜日を含む休みのかたまり（金曜や月曜の祝日がつながれば含める）
+export function nextWeekendRange(): { from: string; to: string } {
+  const t = todayJst();
+  // 今週の土曜日（今日が日曜なら昨日の土曜日）
+  const w = weekday(t);
+  const thisSat = w === 0 ? addDays(t, -1) : addDays(t, 6 - w);
+  const sat = addDays(thisSat, 7);
+  let from = sat;
+  while (isOffDay(addDays(from, -1))) from = addDays(from, -1);
+  let to = sat;
+  while (isOffDay(addDays(to, 1))) to = addDays(to, 1);
+  return { from, to };
+}
+
 // 今日・明日（平日に旅行先で探す人向け）
 export function dayRange(offset: number): { from: string; to: string } {
   const d = addDays(todayJst(), offset);
