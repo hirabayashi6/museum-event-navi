@@ -35,6 +35,8 @@ const AGE_SECTIONS: { key: AgeKey; title: UIKey; lead: UIKey }[] = [
   { key: "high", title: "withHigh", lead: "withHighLead" },
 ];
 
+const HERO_PHOTOS = ["hero-craft", "hero-lawn", "hero-dolphin"];
+
 // 「どこで？」の地方のまとまり
 const REGIONS: [UIKey, string[]][] = [
   ["regionHokkaidoTohoku", ["北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県"]],
@@ -70,10 +72,19 @@ export default async function Home() {
   return (
     <>
       <section className="hero-kids">
-        <div className="hero-text">
-          <h1>{t(lang, "heroTitle")}</h1>
-          <p>{t(lang, "heroLead")}</p>
-          {lang !== "ja" && <p className="note">{t(lang, "titleNote")}</p>}
+        <div className="hero-top">
+          <div className="hero-text">
+            <h1>{t(lang, "heroTitle")}</h1>
+            <p>{t(lang, "heroLead")}</p>
+            {lang !== "ja" && <p className="note">{t(lang, "titleNote")}</p>}
+          </div>
+          {/* 子どもと出かける様子の写真。6秒ごとにゆっくり切り替える（飾りなので読み上げない） */}
+          <div className="hero-photos" aria-hidden="true">
+            {HERO_PHOTOS.map((src, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={src} src={`/images/${src}.webp`} alt="" width={1200} height={800} loading={i === 0 ? "eager" : "lazy"} fetchPriority={i === 0 ? "high" : "auto"} style={{ animationDelay: `${i * 6 - 1}s` }} />
+            ))}
+          </div>
         </div>
         <div className="finder">
           <div className="finder-where">

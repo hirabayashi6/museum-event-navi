@@ -364,3 +364,12 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .geo-msg { margin: 0; }
 .closed-text { margin: 0 0 6px; font-weight: 700; line-height: 1.7; }
 .area-museums .swatch { flex-shrink: 0; }
+
+/* トップの写真：見出しの右に置き、3枚を6秒ずつゆっくり切り替える（スマホでは見出しの上） */
+.hero-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 28px; align-items: center; }
+.hero-photos { position: relative; aspect-ratio: 3 / 2; border-radius: 14px; overflow: hidden; background: var(--cream); }
+.hero-photos img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; animation: hero-fade 18s infinite; }
+.hero-photos img:first-child { opacity: 1; }
+@keyframes hero-fade { 0% { opacity: 0; } 4% { opacity: 1; } 33% { opacity: 1; } 38% { opacity: 0; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .hero-photos img { animation: none; } .hero-photos img:not(:first-child) { display: none; } }
+@media (max-width: 900px) { .hero-top { grid-template-columns: 1fr; gap: 14px; } .hero-photos { order: -1; aspect-ratio: 16 / 9; } }
