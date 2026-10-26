@@ -14,6 +14,17 @@ export type SiteMuseum = { no: string; name: string; pref: string; city: string;
 
 const today = new Date().toISOString().slice(0, 10);
 
+// 題名が会場名だけ（「＜開催場所１ 浦添市美術館＞」「会場：5階展示室」）のときは、「浦添市美術館のワークショップ」のようにする
+const VENUE_TITLE = /^[＜<【\[(（]?\s*(開催場所|開催会場|会場|場所)\s*[0-9０-９]*\s*[:：]?/;
+const KIND_WORD: Record<string, string> = { ワークショップ: "ワークショップ", "講座・公演・音楽イベント": "講座・催し", ギャラリートーク: "ギャラリートーク", "観察会・野外": "観察会", "特別展・企画展": "企画展", 常設展: "展示" };
+const bare = (s: string) => s.replace(/[＜＞<>【】\[\]()（）\s　]/g, "");
+function isVenueTitle(e: NaviEvent): boolean {
+  return VENUE_TITLE.test(e.title.trim()) || bare(e.title) === bare(e.museum);
+}
+function venueTitle(e: NaviEvent): string {
+  return `${e.museum}の${KIND_WORD[e.kind ?? ""] ?? "イベント"}`;
+}
+
 function collect(): { events: NaviEvent[]; museums: SiteMuseum[] } {
   const evDir = path.join(DATA, "events");
   const events = fs.existsSync(evDir)
@@ -25,7 +36,9 @@ function collect(): { events: NaviEvent[]; museums: SiteMuseum[] } {
   const unmatched = (e: NaviEvent) => { const c = checks[e.id]; return Boolean(c && !c.title && !c.date); };
   // 試験用（審査の画面録画など）の催しは、INCLUDE_TEST=1 のときだけ出す
   const includeTest = process.env.INCLUDE_TEST === "1";
-  const current = events.filter((e) => (e.end_date ?? e.start_date) >= today && !unmatched(e) && (includeTest || !e.no.startsWith("test-")));
+  const current = events
+    .filter((e) => (e.end_date ?? e.start_date) >= today && !unmatched(e) && (includeTest || !e.no.startsWith("test-")))
+    .map((e) => (isVenueTitle(e) ? { ...e, title: venueTitle(e) } : e));
   console.log(`照合で外した催し ${events.filter((e) => (e.end_date ?? e.start_date) >= today && unmatched(e)).length}件`);
   // 公開の関門を通ったものだけを出し、落ちたものは要確認として残す
   const review = current.filter((e) => rejectReason(e)).map((e) => ({ ...e, reason: rejectReason(e) }));
