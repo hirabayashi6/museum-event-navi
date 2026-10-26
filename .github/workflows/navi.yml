@@ -61,7 +61,7 @@ jobs:
         run: |
           case "${{ steps.task.outputs.name }}" in
             site) npx tsx src/crawl.ts --concurrency 16 && npx tsx src/structure.ts && npx tsx src/classify-llm.ts && npx tsx src/repair-titles.ts ;;
-            instagram) npx tsx src/instagram.ts --limit 400 && npx tsx src/classify-llm.ts ;;
+            instagram) npx tsx src/instagram.ts --limit 600 --max-minutes 290 && npx tsx src/classify-llm.ts ;;
             verify) npx tsx src/verify.ts --concurrency 14 && npx tsx src/opendata.ts ;;
             amenities) npx tsx src/amenities.ts --only-live --concurrency 16 && npx tsx src/closed-days.ts ;;
             export) echo "書き出しと公開だけを行う（動作確認用）" ;;

@@ -1,5 +1,5 @@
 // Instagram の巡回：館のアカウントの最近の投稿から、これからある催しを拾う（Business Discovery を使う）
-// 使い方: npm run instagram -- [--limit 300] [--guess] [--only 1234] [--refetch]
+// 使い方: npm run instagram -- [--limit 300] [--guess] [--only 1234] [--refetch] [--max-minutes 300]
 //   --guess … 名簿にアカウントがない館について、公式サイトのドメインからアカウント名を推測して試す
 // 出力: data/sns/instagram.json（アカウントの確認結果）、data/events/{No}.json（method "Instagram" の催し）
 // 投稿の本文や写真は転載しない。催しの名前・日付などの事実と、元の投稿へのリンクだけを載せる
@@ -56,7 +56,9 @@ async function discover(username: string): Promise<Profile | null | "limit" | "o
   if (!res || res.status >= 500) return "offline"; // 通信の失敗・Meta側の不調は「見つからない」と記録しない
   // 使用率（%）が8割を超えたら15分休む
   const pct = usagePct(res);
-  if (pct >= 80) { console.log(`  使用率 ${pct}% のため15分休みます`); await sleep(15 * 60_000); }
+  // 使用率に応じて休む（80%台は2分、90%以上は10分）。一律に長く休むと、GitHub の時間内に進まない
+  if (pct >= 90) { console.log(`  使用率 ${pct}% のため10分休みます`); await sleep(10 * 60_000); }
+  else if (pct >= 80) await sleep(2 * 60_000);
   const body = (await res.json().catch(() => ({}))) as { business_discovery?: Profile; error?: { code?: number; error_subcode?: number; message?: string } };
   if (body.error) {
     const code = body.error.code ?? 0;
@@ -132,8 +134,11 @@ async function main(): Promise<void> {
   };
   let calls = 0;
   let offline = 0;
+  // --max-minutes … この時間を過ぎたら切り上げて、そこまでの分を保存する（GitHub の1回の上限時間に収めるため）
+  const deadline = Date.now() + Number(argValue("max-minutes") ?? "100000") * 60_000;
   for (const j of due) {
     if (calls >= limit) break;
+    if (Date.now() > deadline) { console.log("時間の上限に達したので、ここまでの分を保存して終えます"); break; }
     const no = j.r["No."] ?? "";
     let p = fetched.get(j.username);
     if (p === undefined) {
