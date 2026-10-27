@@ -7,6 +7,7 @@ import { z } from "zod";
 import { DATA } from "./lib/paths.js";
 import { askJson } from "./lib/llm.js";
 import { rejectReason } from "./lib/quality.js";
+import { staleReason } from "./lib/raw-checks.js";
 import type { NaviEvent } from "./structure.js";
 
 if (fs.existsSync(".env")) process.loadEnvFile(".env");
@@ -32,8 +33,9 @@ function onlyPastYears(raw: string): boolean {
   const years = [...raw.normalize("NFKC").matchAll(/(20\d{2})\s*年|令和\s*(\d{1,2})\s*年/g)].map((m) => (m[1] ? Number(m[1]) : 2018 + Number(m[2])));
   return years.length > 0 && Math.max(...years) < thisYear;
 }
+// 古い催し・他館の催しは、題名を作り直しても載らないので送らない（無料枠の節約）
 const titleBroken = (e: NaviEvent) =>
-  e.kind ? TITLE_REASONS.test(rejectReason(e) ?? "") : notEvent[e.title] === "催しではない" && (e.raw ?? "").length > e.title.length + 8 && !onlyPastYears(e.raw ?? "");
+  staleReason(e) ? false : e.kind ? TITLE_REASONS.test(rejectReason(e) ?? "") : notEvent[e.title] === "催しではない" && (e.raw ?? "").length > e.title.length + 8 && !onlyPastYears(e.raw ?? "");
 
 function prompt(items: NaviEvent[]): string {
   return `博物館・美術館の公式サイトの一部分です。それぞれの文章から、来館者が参加・鑑賞する「催しの名前」だけを取り出してください。

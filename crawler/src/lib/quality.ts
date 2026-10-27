@@ -1,5 +1,6 @@
 // 公開の関門：題名として成り立ち、種類が分かる催しだけをサイトに出す。落ちたものは要確認に回す
 import type { NaviEvent } from "../structure.js";
+import { rawReason } from "./raw-checks.js";
 
 const BAD_TITLE = /小雨決行|雨天決行|^各日|\d+名(様)?$|^毎週.{1,4}曜日$|イベントカレンダーに戻る|始めます|量り売り|数量限定|入荷|販売開始|新商品|\s\.\.\.\s|開場時間|営業時間|周年を迎え|迎えます|チラシ|ポスター|PDF|詳細|こちら|もっと見る|一覧|ページ|販売|定休日|休館|参加しました|行いました|ました。?$|されます。?$|ください。?$|募集|受付期間|申込期限|必着|開館時間|入館料|観覧料|料金|アクセス|駐車場/;
 // リンクの文字・注意書き・施設名だけの行
@@ -91,5 +92,6 @@ export function rejectReason(e: NaviEvent): string | null {
   if (e.museum.includes(t) || t === e.museum) return "館名だけ";
   // 英語だけの題名は、2語以上で、メニューの言葉でなければ通す（「COSMIC SALON」など）
   if (!/[぀-ヿ一-鿿]/.test(t) && ((t.match(/[A-Za-z]{2,}/g) ?? []).length < 2 || EN_NAV.test(t.trim()))) return "日本語の題名がない";
-  return null;
+  // 元の文章と照らし合わせて、古い催し・別の館の催し・名前と日付の組み違いを落とす
+  return rawReason(e);
 }
