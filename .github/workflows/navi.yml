@@ -79,4 +79,8 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@63.1.2 --prod --yes --scope hirabayashi-5135s-projects --token "${{ secrets.VERCEL_TOKEN }}"
+        # 長い実行の途中でサイトのコードが直されることがあるので、data 以外は公開直前の最新に合わせる
+        run: |
+          git fetch -q --depth 1 origin main
+          git restore --source=FETCH_HEAD --worktree -- . ':(exclude)data'
+          npx --yes vercel@63.1.2 --prod --yes --scope hirabayashi-5135s-projects --token "${{ secrets.VERCEL_TOKEN }}"
