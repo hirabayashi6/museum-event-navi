@@ -3,6 +3,7 @@
 #   Instagram        … 毎日 1:00（Metaの上限のため1回400件まで。残りは翌日）
 #   元ページとの照合・自治体オープンデータ … 日曜 3:00
 #   設備・休館日の調べ直し … 毎月1日 2:00
+#   AIの残り作業（種類の判定・題名の作り直し）… 毎日 13:00（夜の実行で無料枠を使い切った分の続き）
 # 巡回の状態（名簿を含む）は暗号化して、リリース「state」の添付ファイルとして保存する（リポジトリには入れない）
 name: navi
 on:
@@ -11,12 +12,13 @@ on:
     - cron: "0 16 * * *"
     - cron: "0 18 * * 6"
     - cron: "0 17 1 * *"
+    - cron: "0 4 * * *"
   workflow_dispatch:
     inputs:
       task:
         description: "実行する作業"
         type: choice
-        options: [site, instagram, verify, amenities, export]
+        options: [site, instagram, verify, amenities, llm, export]
         default: instagram
 permissions:
   contents: write
@@ -49,6 +51,7 @@ jobs:
             "0 16 * * *") t=instagram ;;
             "0 18 * * 6") t=verify ;;
             "0 17 1 * *") t=amenities ;;
+            "0 4 * * *") t=llm ;;
             *) t="${{ inputs.task }}" ;;
           esac
           echo "name=$t" >> "$GITHUB_OUTPUT"
@@ -64,6 +67,7 @@ jobs:
             instagram) npx tsx src/instagram.ts --limit 600 --max-minutes 290 && npx tsx src/classify-llm.ts ;;
             verify) npx tsx src/verify.ts --concurrency 14 && npx tsx src/opendata.ts ;;
             amenities) npx tsx src/amenities.ts --only-live --concurrency 16 && npx tsx src/closed-days.ts ;;
+            llm) npx tsx src/classify-llm.ts && npx tsx src/repair-titles.ts ;;
             export) echo "書き出しと公開だけを行う（動作確認用）" ;;
           esac
           npx tsx src/export.ts
