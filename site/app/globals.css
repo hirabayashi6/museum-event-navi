@@ -270,6 +270,12 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 /* ===== 子ども向けの作り直し ===== */
 /* カードの日付：以前の「白い四角を重ねる」指定を打ち消し、色の面の中に収める */
 .card-panel .card-date { position: static; background: none; padding: 0; color: inherit; }
+/* 「〜まで」などの小さい字も、色の面に合わせた文字色にする（灰色は青や赤の面で読みにくい） */
+.card-panel .card-date small { color: inherit; opacity: 1; }
+/* 幅の狭いスマホで「開催中」「だれでも」が1字ずつ折り返さないようにする（年齢の補足は折り返してよい） */
+.card-panel .card-date { flex-shrink: 0; white-space: nowrap; }
+.card-who { min-width: 0; }
+.card-age { white-space: nowrap; }
 .card-head { align-items: flex-start; }
 .card-who { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 .card-age { display: block; font-size: 1rem; font-weight: 900; line-height: 1.15; background: var(--paper); color: var(--ink); padding: 3px 7px; }
