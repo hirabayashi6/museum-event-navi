@@ -52,7 +52,6 @@ export function SideMenu({ lang, pref }: { lang: Lang; pref: string }) {
         ))}
       </ul>
       <ul className="side-foot">
-        <li><Link href="/voices">{t(lang, "voices")}</Link></li>
         <li><Link href="/about">{t(lang, "about")}</Link></li>
         <li><Link href="/about#museums">{t(lang, "forMuseums")}</Link></li>
       </ul>

@@ -311,21 +311,6 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 .amen ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-weight: 700; }
 .amen li::before { content: "✓ "; color: var(--accent); }
 
-/* 親御さんの声（掲示板）。枠ラベルは使わず、付せんのような紙面で見せる */
-.voices-page h1 { font-size: 1.6rem; margin: 32px 0 8px; }
-.voices-page .lead { color: var(--sub); max-width: 40em; }
-.voice-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-.voice { background: var(--cream); padding: 16px 18px 12px; border-top: 3px solid var(--accent); display: flex; flex-direction: column; justify-content: space-between; min-height: 120px; }
-.voice-body { margin: 0 0 12px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
-.voice-meta { margin: 0; font-size: .78rem; color: var(--sub); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.voice-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 16px; max-width: 760px; }
-.voice-form label { display: flex; flex-direction: column; gap: 6px; font-size: .85rem; font-weight: 700; }
-.voice-form .vf-wide { grid-column: 1 / -1; }
-.voice-form textarea, .voice-form input { width: 100%; font: inherit; font-size: .95rem; padding: 10px 12px; border: 1px solid var(--line); background: var(--paper); border-radius: 0; box-sizing: border-box; }
-.voice-form .vf-trap { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
-.vf-err { margin-left: 12px; color: #b3261e; }
-.voice-thanks { background: var(--cream); padding: 18px; font-weight: 700; }
-@media (max-width: 640px) { .voice-form { grid-template-columns: 1fr; } }
 
 /* トップの入口：どこで → いつ → 何歳。枠ラベルは使わず、四角い面と下線で示す */
 .finder { background: var(--cream); padding: 18px 18px 16px; }

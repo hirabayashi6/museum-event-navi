@@ -18,7 +18,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     url("/", 1),
     url("/about", 0.3, "weekly"),
-    url("/voices", 0.4, "weekly"),
     ...GENRES.map((g) => url(`/genres/${g.slug}`, 0.7)),
     ...PREFS.filter((p) => prefs.has(p)).map((p) => url(`/area/${encodeURIComponent(p)}`, 0.8)),
     ...PREFS.flatMap((p) =>

@@ -10,7 +10,7 @@ const REVALIDATE_SECONDS = 600;
 async function fromSupabase<T>(table: string, query: string): Promise<T[] | null> {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_ANON_KEY;
-  // イベントの読み先は EVENTS_FROM_SUPABASE=1 のときだけ Supabase にする（鍵は「親御さんの声」でも使うため）
+  // イベントの読み先は EVENTS_FROM_SUPABASE=1 のときだけ Supabase にする
   if (!url || !key || process.env.EVENTS_FROM_SUPABASE !== "1") return null;
   const res = await fetch(`${url}/rest/v1/${table}?${query}`, {
     // 新形式のキー（sb_…）は apikey ヘッダーだけ、旧形式（JWT）は Authorization も付ける

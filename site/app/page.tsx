@@ -11,8 +11,6 @@ import { EventGrid } from "@/components/EventCard";
 import { Banners } from "@/components/Banners";
 import { GenreTiles } from "@/components/GenreTiles";
 import { RegionPicker } from "@/components/RegionPicker";
-import { VoiceList } from "@/components/VoiceList";
-import { getVoices } from "@/lib/voices";
 
 const WANT_IMG: Record<Want, string> = {
   つくる: "want-make",
@@ -50,7 +48,7 @@ const REGIONS: [UIKey, string[]][] = [
 const WHEN_BTNS: [string, UIKey][] = [["today", "today"], ["tomorrow", "tomorrow"], ["this-weekend", "thisWeekend"], ["", "anytime"]];
 
 export default async function Home() {
-  const [events, jar, lang, voices] = await Promise.all([getEvents(), cookies(), getLang(), getVoices(3)]);
+  const [events, jar, lang] = await Promise.all([getEvents(), cookies(), getLang()]);
   // 選んだ地域（なければ全国）。地域のイベントが少なければ全国で補う
   const pref = decodeURIComponent(jar.get("navi_pref")?.value ?? "");
   const local = pref ? events.filter((e) => e.pref === pref) : [];
@@ -169,11 +167,6 @@ export default async function Home() {
             </Link>
           ))}
         </nav>
-      </section>
-
-      <section className="sec">
-        <div className="sec-row"><h2>{t(lang, "voices")}</h2><Link href="/voices">{t(lang, "voicesMore")} →</Link></div>
-        {voices.length ? <VoiceList voices={voices.slice(0, 3)} lang={lang} /> : <p className="note">{t(lang, "voicesLead")}</p>}
       </section>
 
       <section className="sec">
