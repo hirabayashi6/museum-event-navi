@@ -62,6 +62,8 @@ function cleanOnce(t: string): string {
 // 一覧ページの見出し（催しの題名ではない）
 const HEADING = /^(開催中|開催予定|まもなく開催|今後|これから|過去|終了した|注目|おすすめ|今月|来月|\d{1,2}月|春|夏|秋|冬)?の?(イベント|催し|行事|展示|講座)(情報|一覧|案内|予定|カレンダー)?$|のイベント情報$/;
 
+const EN_NAV = /^(home|top|press|news|access|menu|events?|information|info|contact|about( us)?|shop|online shop|read more|more|english|faq|exhibitions?|gallery|collections?|map|sitemap|privacy policy|page top|back)$/i;
+
 export function rejectReason(e: NaviEvent): string | null {
   if (HEADING.test(e.title.trim()) || HEADING.test(cleanPublicTitle(e.title))) return "一覧の見出し";
   // 館名＋「企画展・イベント」のように、分類の言葉だけでできた行も見出し
@@ -87,6 +89,7 @@ export function rejectReason(e: NaviEvent): string | null {
   if (/^(中|開催中|期間中)の/.test(t) || /^(健康|福祉|子育て|くらし|観光|産業|ビジネス)[・、]/.test(t)) return "見出しの切れ端";
   if (NOT_TITLE.test(t)) return "リンク文字・注意書き・施設名";
   if (e.museum.includes(t) || t === e.museum) return "館名だけ";
-  if (!/[぀-ヿ一-鿿]/.test(t)) return "日本語の題名がない";
+  // 英語だけの題名は、2語以上で、メニューの言葉でなければ通す（「COSMIC SALON」など）
+  if (!/[぀-ヿ一-鿿]/.test(t) && ((t.match(/[A-Za-z]{2,}/g) ?? []).length < 2 || EN_NAV.test(t.trim()))) return "日本語の題名がない";
   return null;
 }
