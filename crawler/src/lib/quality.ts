@@ -76,7 +76,7 @@ export function rejectReason(e: NaviEvent): string | null {
   if (t.length > 70) return "題名が長すぎる（文章の切れ端）";
   if (TIME_ONLY.test(t)) return "時刻だけ";
   if (DATE_ONLY.test(t)) return "日付・曜日だけ";
-  if (STATUS_ONLY.test(t)) return "状態の言葉だけ";
+  if (STATUS_ONLY.test(t) || /^(前期|後期|前期・後期|前後期)(の)?(展示|展示替え)?$/.test(t)) return "状態の言葉だけ";
   if (CATEGORY_MONTH.test(t) && !REAL_MONTH.test(t)) return "種類の見出し（月表示）";
   if (/^.{1,10}のイベント$/.test(t)) return "種類の見出し";
   // 市のサイトなどの共通の見出し（「今治市 イベント情報」）。題名の作り直しの対象（見出し）にする

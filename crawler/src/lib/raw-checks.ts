@@ -28,13 +28,32 @@ function yearTooLate(e: NaviEvent, raw: string): boolean {
   return ys.length > 0 && Math.max(...ys) < Number(e.start_date.slice(0, 4));
 }
 
-// 開始日に添えられた曜日が、その年の曜日と合わない（年が書いてあればサイトの書き間違いとみなして通す）
+// 開始日・終了日に添えられた曜日が、その年の曜日と合わない（年が書いてあればサイトの書き間違いとみなして通す）
+// かっこなしの曜日は「16日日曜日」（日の後ろに曜）と「2/22土に」（後ろがひらがな・区切り。「10/31日」は日付の日なので除く）だけを曜日とみなす
+function weekdayOff(iso: string, raw: string): "合う" | "合わない" | "なし" {
+  const m = Number(iso.slice(5, 7));
+  const d = Number(iso.slice(8, 10));
+  const day = `(?<!\\d)0?${m}\\s*`;
+  const hit =
+    raw.match(new RegExp(`${dateRe(iso).source}\\s*[(（]\\s*([日月火水木金土])`)) ??
+    raw.match(new RegExp(`${day}月\\s*0?${d}\\s*日\\s*([日月火水木金土])(?=曜)`)) ??
+    raw.match(new RegExp(`${day}\\/\\s*0?${d}([月火水木金土])(?=[ぁ-ん曜\\s、,)）]|$)`));
+  if (!hit) return "なし";
+  if (new RegExp(`${iso.slice(0, 4)}\\s*[年/.]\\s*${dateRe(iso).source}`).test(raw)) return "合う";
+  return WEEK[new Date(`${iso}T00:00:00Z`).getUTCDay()] === hit[1] ? "合う" : "合わない";
+}
+// 開始日の曜日が合っていれば、終了日の曜日の食い違いはサイトの書き間違いとみなす
 function weekdayMismatch(e: NaviEvent, raw: string): boolean {
-  const hit = raw.match(new RegExp(`${dateRe(e.start_date).source}\\s*[(（]\\s*([日月火水木金土])`));
-  if (!hit) return false;
-  const y = e.start_date.slice(0, 4);
-  if (new RegExp(`${y}\\s*[年/.]\\s*${dateRe(e.start_date).source}`).test(raw)) return false;
-  return WEEK[new Date(`${e.start_date}T00:00:00Z`).getUTCDay()] !== hit[hit.length - 1];
+  const start = weekdayOff(e.start_date, raw);
+  if (start !== "なし") return start === "合わない";
+  return !!e.end_date && weekdayOff(e.end_date, raw) === "合わない";
+}
+
+// 題名に入った年（「文化祭2023」）がすべて催しの年の2年以上前。「コレクション2026」は翌年の初めまで続くので1年前は通す
+// 「1967-2024」のような活動期間の終わりの年は数えない
+function titleYearOld(e: NaviEvent): boolean {
+  const ys = [...norm(e.title).matchAll(/(?<!(19|20)\d{2}\s*[-–～〜]\s*)(20\d{2})(?!\d)/g)].map((m) => Number(m[2]));
+  return ys.length > 0 && Math.max(...ys) < Number(e.start_date.slice(0, 4)) - 1;
 }
 
 // 「期間：」「日時」などの説明の見出しで始まる行（日付の行でも、隣の題名の説明）
@@ -52,6 +71,12 @@ function sharesWords(seg: string, t: string): boolean {
   for (let i = 0; i + 4 <= t.length; i++) if (c.includes(t.slice(i, i + 4))) return true;
   return false;
 }
+
+// 分類の言葉（「コレクション展示」など）だけが同じでも、同じ催しとはいえない
+const GENERIC = /コレクション展示?|企画展示?|特別展示?|常設展示?|テーマ展示?|展覧会|ギャラリートーク|ワークショップ|講演会|講座|イベント|展示/g;
+const sharesName = (seg: string, t: string) => sharesWords(core(seg).replace(GENERIC, ""), t.replace(GENERIC, ""));
+// チラシ・PDFのリンクの文字（その下の日付と説明は、別の展示のことがある）
+const LINK_LABEL = /^(チラシ|ポスター|リーフレット)|PDF|ダウンロード/i;
 
 // 日付の行が、題名とは別の催しのものか
 function otherEventLine(seg: string, t: string): boolean {
@@ -78,12 +103,17 @@ function pairBroken(e: NaviEvent): boolean {
   const di = segs.findIndex((s) => re.test(s));
   if (di < 0) return false;
   const dateSeg = segs[di] ?? "";
-  const ti = segs.findIndex((s, i) => i !== di && sharesWords(s, t));
+  // 題名の行は、分類の言葉を除いても同じ言葉がある行を先に探す
+  const found = segs.findIndex((s, i) => i !== di && sharesName(s, t));
+  const ti = found >= 0 ? found : segs.findIndex((s, i) => i !== di && sharesWords(s, t));
   if (ti < 0) return false;
   if (otherEventLine(dateSeg, t)) return true;
+  // 「チラシ【○○展】 ／ 日付 ／ 別の展示の説明」：題名がリンクの文字で、日付の後ろの説明に題名の言葉がない
+  const after = segs[di + 1];
+  if (ti === di - 1 && LINK_LABEL.test(segs[ti] ?? "") && after !== undefined && nameLike(after) && !sharesWords(after, t)) return true;
   // 題名が日付のすぐ後ろにあり、日付の前の行にも別の名前があれば、日付がどちらのものか分からない
   const before = segs[di - 1];
-  return ti === di + 1 && before !== undefined && before.length < 40 && !/[。！!]/.test(before) && nameLike(before) && !sharesWords(before, t);
+  return ti === di + 1 && before !== undefined && before.length < 40 && !/[。！!]/.test(before) && nameLike(before) && !t.includes(core(before)) && !sharesName(before, t);
 }
 
 // 年・曜日・まとめサイト・締切日の決まり（題名によらない）。当たるものは題名を作り直しても載らない
@@ -97,6 +127,7 @@ export function staleReason(e: NaviEvent): string | null {
   if (!ig && PAST_WORD.test(raw)) return "終わった催しの報告";
   if (!ig && yearTooLate(e, raw)) return "書かれた年より後の年に置いている";
   if (weekdayMismatch(e, raw)) return "曜日が合わない（年の読み違い）";
+  if (titleYearOld(e)) return "名前に古い年が入っている";
   if (new RegExp(`${dateRe(e.start_date).source}[^/]{0,8}(必着|締切|締め切り|申込締)`).test(raw)) return "申込の締切日を開催日にしている";
   return null;
 }
