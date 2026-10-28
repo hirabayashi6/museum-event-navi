@@ -1,0 +1,76 @@
+{
+  "_説明": "館から直接いただいた情報。巡回の結果より優先して載せ、子ども向けかどうかの判定もかけない。hide は同じ館の、巡回で拾った誤り・重複の催しのID。終わった催しは自動で消えるので、残しておいてよい",
+  "hide": ["6f4f39e5eb5756ad", "ef6705c7adbf2ce0"],
+  "museums": [
+    { "no": "4050", "name": "安芸高田市歴史民俗博物館", "pref": "広島県", "city": "安芸高田市", "category": "歴史博物館", "url": "https://www.akitakata.jp/ja/hakubutsukan/", "closed": "毎週火曜日（祝日を除く。火曜が祝日の場合は翌日）", "instagram": null }
+  ],
+  "events": [
+    {
+      "id": "p-4050-geibi-ex",
+      "no": "4050", "museum": "安芸高田市歴史民俗博物館", "pref": "広島県", "city": "安芸高田市",
+      "title": "秋季企画展「安芸高田 芸備線物語」（芸備線全通90年記念）",
+      "kind": "特別展・企画展",
+      "start_date": "2026-10-02", "end_date": "2026-12-07",
+      "time": "9:00〜17:00（火曜休館。11/3は開館、11/4は休館）",
+      "audience": [],
+      "fee": "500円、中学生以下無料",
+      "reservation": "不要",
+      "place": null,
+      "source_url": "https://www.akitakata.jp/ja/hakubutsukan/exhibitions/specialexhibitions/m657/",
+      "method": "館からの情報提供", "confidence": 1, "provided_at": "2026-10-28"
+    },
+    {
+      "id": "p-4050-geibi-talk-1101",
+      "no": "4050", "museum": "安芸高田市歴史民俗博物館", "pref": "広島県", "city": "安芸高田市",
+      "title": "企画展「芸備線物語」展示解説",
+      "kind": "ギャラリートーク",
+      "start_date": "2026-11-01", "end_date": null,
+      "time": "11:00〜11:40",
+      "audience": [], "fee": null, "reservation": "不要", "place": null,
+      "lecturer": "当館副館長 秋本哲治",
+      "source_url": "https://www.akitakata.jp/ja/hakubutsukan/exhibitions/specialexhibitions/m657/",
+      "method": "館からの情報提供", "confidence": 1, "provided_at": "2026-10-28"
+    },
+    {
+      "id": "p-4050-geibi-talk-1115",
+      "no": "4050", "museum": "安芸高田市歴史民俗博物館", "pref": "広島県", "city": "安芸高田市",
+      "title": "企画展「芸備線物語」展示解説",
+      "kind": "ギャラリートーク",
+      "start_date": "2026-11-15", "end_date": null,
+      "time": "11:00〜11:40",
+      "audience": [], "fee": null, "reservation": "不要", "place": null,
+      "lecturer": "当館副館長 秋本哲治",
+      "source_url": "https://www.akitakata.jp/ja/hakubutsukan/exhibitions/specialexhibitions/m657/",
+      "method": "館からの情報提供", "confidence": 1, "provided_at": "2026-10-28"
+    },
+    {
+      "id": "p-4050-geibi-talk-1129",
+      "no": "4050", "museum": "安芸高田市歴史民俗博物館", "pref": "広島県", "city": "安芸高田市",
+      "title": "企画展「芸備線物語」展示解説",
+      "kind": "ギャラリートーク",
+      "start_date": "2026-11-29", "end_date": null,
+      "time": "11:00〜11:40",
+      "audience": [], "fee": null, "reservation": "不要", "place": null,
+      "lecturer": "当館副館長 秋本哲治",
+      "source_url": "https://www.akitakata.jp/ja/hakubutsukan/exhibitions/specialexhibitions/m657/",
+      "method": "館からの情報提供", "confidence": 1, "provided_at": "2026-10-28"
+    },
+    {
+      "id": "p-4050-geibi-tour",
+      "no": "4050", "museum": "安芸高田市歴史民俗博物館", "pref": "広島県", "city": "安芸高田市",
+      "title": "芸備線ガイドツアー〜そうだ、芸備線に乗ろう〜",
+      "kind": "観察会・野外",
+      "start_date": "2026-11-15", "end_date": null,
+      "time": "13:00〜16:00",
+      "audience": [],
+      "fee": "3,000円（入館料・バス代・保険料込み）、小中学生以下1,000円。鉄道運賃は別途必要",
+      "reservation": "必要",
+      "place": "当館〜（バス）〜向原駅＝（鉄道）＝上三田駅＝（鉄道）＝甲立駅〜（バス）〜当館",
+      "capacity": "20人（安芸高田市在住、市内に通勤・通学している方に限る）",
+      "apply": "10/2（金）9時から受付。申込・問い合わせは当館（0826-42-0070）",
+      "lecturer": "当館副館長 秋本哲治",
+      "source_url": "https://www.akitakata.jp/ja/hakubutsukan/exhibitions/specialexhibitions/m657/",
+      "method": "館からの情報提供", "confidence": 1, "provided_at": "2026-10-28"
+    }
+  ]
+}

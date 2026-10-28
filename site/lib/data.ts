@@ -4,6 +4,7 @@ import path from "node:path";
 import type { Museum, NaviEvent } from "./types";
 import { todayJst } from "./dates";
 import { isKidFriendly } from "./kids";
+import { isProvided, mergeProvided, providedMuseums } from "./provided";
 
 const REVALIDATE_SECONDS = 600;
 
@@ -36,14 +37,19 @@ export async function getEvents(): Promise<NaviEvent[]> {
   const museums = new Map(ms.map((m) => [m.no, m.category]));
   const amen = new Map(ms.map((m) => [m.no, m.amen]));
   // このサイトは子どものいる家族向け：子どもと行けるイベントだけを載せる
-  return rows
+  // 館から直接いただいた情報は、子ども向けの判定をかけずに載せる
+  return mergeProvided(rows)
     .filter((e) => (e.end_date ?? e.start_date) >= today)
     .map((e) => ({ ...e, category: e.category || (museums.get(e.no) ?? ""), amen: amen.get(e.no) }))
-    .filter(isKidFriendly);
+    .filter((e) => isProvided(e) || isKidFriendly(e))
+    .sort((a, b) => a.start_date.localeCompare(b.start_date));
 }
 
 export async function getMuseums(): Promise<Museum[]> {
-  return (await fromSupabase<Museum>("museums", "select=*&limit=10000")) ?? (await fromFile<Museum>("museums.json"));
+  const rows = (await fromSupabase<Museum>("museums", "select=*&limit=10000")) ?? (await fromFile<Museum>("museums.json"));
+  // 館から情報をいただいた館が、巡回の書き出しに無いときは補う
+  const have = new Set(rows.map((m) => m.no));
+  return [...rows, ...providedMuseums.filter((m) => !have.has(m.no))];
 }
 
 export async function getEvent(id: string): Promise<NaviEvent | undefined> {

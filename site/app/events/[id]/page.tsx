@@ -8,6 +8,7 @@ import { EventArt, EventGrid } from "@/components/EventCard";
 import { ShareButtons } from "@/components/ShareButtons";
 import { pageMeta, breadcrumbLd, JsonLd, SITE_URL, safeUrl } from "@/lib/seo";
 import { imageFor } from "@/lib/images";
+import { isProvided } from "@/lib/provided";
 import type { NaviEvent } from "@/lib/types";
 
 export const revalidate = 600;
@@ -92,10 +93,10 @@ export default async function EventPage({ params }: Props) {
           </dl>
           {facts.some(([, v]) => !v) && (
             <p className="note">
-              {facts.filter(([, v]) => !v).map(([k]) => k).join(lang === "en" ? ", " : "・")}{t(lang, "missingNote")}
+              {facts.filter(([, v]) => !v).map(([k]) => k).join(lang === "en" ? ", " : "・")}{t(lang, isProvided(e) ? "missingNoteProvided" : "missingNote")}
             </p>
           )}
-          <p className="note">{e.method === "Instagram" || e.method === "Facebook" ? t(lang, "snsNote") : `${e.museum}${t(lang, "autoNote")}`}</p>
+          <p className="note">{e.method === "Instagram" || e.method === "Facebook" ? t(lang, "snsNote") : `${e.museum}${t(lang, isProvided(e) ? "providedNote" : "autoNote")}`}</p>
           {e.credit && <p className="note">{e.credit}</p>}
           {lang !== "ja" && <p className="note">{t(lang, "titleNote")}</p>}
           <JsonLd data={jsonLd} />
