@@ -47,9 +47,10 @@ export async function getEvents(): Promise<NaviEvent[]> {
 
 export async function getMuseums(): Promise<Museum[]> {
   const rows = (await fromSupabase<Museum>("museums", "select=*&limit=10000")) ?? (await fromFile<Museum>("museums.json"));
-  // 館から情報をいただいた館が、巡回の書き出しに無いときは補う
+  // 館からいただいた館の情報（休館日など）は巡回の結果より優先し、書き出しに無い館は補う
+  const own = new Map(providedMuseums.map((m) => [m.no, m]));
   const have = new Set(rows.map((m) => m.no));
-  return [...rows, ...providedMuseums.filter((m) => !have.has(m.no))];
+  return [...rows.map((m) => ({ ...m, ...own.get(m.no) })), ...providedMuseums.filter((m) => !have.has(m.no))];
 }
 
 export async function getEvent(id: string): Promise<NaviEvent | undefined> {
